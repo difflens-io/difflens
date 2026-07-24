@@ -1,0 +1,43 @@
+name: Feature Request
+description: Suggest an improvement or new supported format.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow would this improve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the behavior you want DiffLens to support.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Format detection
+        - Structured diff
+        - Text diff
+        - Editor display
+        - Folding
+        - Ignore rules
+        - Import / export
+        - Privacy / analytics
+        - Deployment
+        - Other
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example Input
+      description: Include sanitized sample input when useful.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered

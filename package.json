@@ -1,0 +1,62 @@
+{
+  "name": "difflens",
+  "version": "1.0.0",
+  "description": "A local-first structured text diff tool for JSON, HTTP Request, cURL, Cookie, CSV, Markdown, TOML, and plain text.",
+  "license": "MIT",
+  "homepage": "https://www.difflens.io/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/difflens-io/difflens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/difflens-io/difflens/issues"
+  },
+  "keywords": [
+    "diff",
+    "json",
+    "http-request",
+    "curl",
+    "cookie",
+    "csv",
+    "markdown",
+    "toml",
+    "local-first"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "deploy:static": "npm run build && ./scripts/deploy-static.sh",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.10.4",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-markdown": "^6.5.1",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.6",
+    "diff": "^8.0.2",
+    "fast-xml-parser": "^5.2.5",
+    "lucide-react": "^0.468.0",
+    "papaparse": "^5.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "smol-toml": "^1.7.0",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.2.3",
+    "@types/papaparse": "^5.3.15",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="DiffLens">
+  <defs>
+    <linearGradient id="bg" x1="10" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="lens" x1="18" y1="16" x2="48" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbeafe"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <path d="M41.8 40.2 54 52.4 49.6 56.8 37.4 44.6Z" fill="#bae6fd"/>
+  <circle cx="29.5" cy="28.5" r="18" fill="url(#lens)" stroke="#e0f2fe" stroke-width="2"/>
+  <path d="M29.5 11a17.5 17.5 0 0 0 0 35Z" fill="#e0f2fe"/>
+  <path d="M20 21h8v4h-8Zm0 10h14v4H20Z" fill="#16a34a"/>
+  <path d="M31 21h9v4h-9Zm7 10h3v4h-3Z" fill="#ef4444"/>
+</svg>

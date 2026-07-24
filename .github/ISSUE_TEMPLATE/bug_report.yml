@@ -1,0 +1,70 @@
+name: Bug Report
+description: Report a reproducible DiffLens problem.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Do not include private tokens, credentials, or sensitive comparison content.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide the shortest input and actions that reproduce the issue.
+      placeholder: |
+        1. Select format ...
+        2. Paste ...
+        3. Enable ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: dropdown
+    id: format
+    attributes:
+      label: Input Format
+      options:
+        - Auto
+        - JSON
+        - YAML
+        - TOML
+        - XML / HTML
+        - Markdown
+        - cURL
+        - HTTP Request
+        - CSV / TSV
+        - Cookie / Set-Cookie
+        - Java Properties
+        - Plain Text
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and Version
+      placeholder: Chrome 126, Firefox 127, Safari 17
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional Context
+      description: Screenshots are helpful if they do not expose sensitive content.

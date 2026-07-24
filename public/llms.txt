@@ -1,0 +1,21 @@
+# DiffLens
+
+DiffLens is a local-first online text diff tool for structured developer text.
+
+Website: https://www.difflens.io/
+GitHub: https://github.com/difflens-io/difflens
+
+Key capabilities:
+- Compare JSON, YAML, TOML, XML, HTML, Markdown, cURL, HTTP Request, CSV, TSV, Cookie, Set-Cookie, Java Properties, and plain text.
+- Highlight field-level differences for structured formats.
+- Highlight inline value fragments when values partially differ.
+- Compare content in the browser without uploading user comparison text.
+- Support editor line numbers, folding, diff-only view, synchronized scrolling, and adjustable panes.
+
+Useful entry pages:
+- JSON diff: https://www.difflens.io/json-diff/
+- cURL diff: https://www.difflens.io/curl-diff/
+- Cookie diff: https://www.difflens.io/cookie-diff/
+- HTTP Request diff: https://www.difflens.io/http-request-diff/
+- TOML diff: https://www.difflens.io/toml-diff/
+- Markdown diff: https://www.difflens.io/markdown-diff/
