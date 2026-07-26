@@ -494,10 +494,10 @@ export default function App() {
           </a>
           <a
             className="open-source-link star"
-            href="https://github.com/difflens-io/difflens/stargazers"
+            href="https://github.com/difflens-io/difflens"
             target="_blank"
             rel="noreferrer"
-            onClick={() => trackEvent('open_source_link_clicked', { target: 'stargazers' })}
+            onClick={() => trackEvent('open_source_link_clicked', { target: 'star_repository' })}
           >
             <Star size={16} />
             Star DiffLens
