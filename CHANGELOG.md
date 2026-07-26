@@ -30,6 +30,7 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Kept the diff sidebar collapse and expand control at the same top position and moved the floating diff navigation away from the sidebar toggle.
 - Repositioned the floating diff navigation near the right side of the diff sidebar so it does not cover editor content.
 - Fixed GitHub source and Star actions so they explicitly open the repository and cannot fall through to lower page controls.
+- Removed the same-tab fallback from GitHub source actions so opening GitHub never navigates away from the current DiffLens page.
 
 ## 2026-07-24
 

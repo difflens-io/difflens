@@ -224,8 +224,7 @@ export default function App() {
     event.stopPropagation();
     trackEvent('open_source_link_clicked', { target });
 
-    const opened = window.open(GITHUB_REPOSITORY_URL, '_blank', 'noopener,noreferrer');
-    if (!opened) window.location.href = GITHUB_REPOSITORY_URL;
+    window.open(GITHUB_REPOSITORY_URL, '_blank', 'noopener,noreferrer');
   }
 
   function selectRelative(offset: number) {
