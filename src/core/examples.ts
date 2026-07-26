@@ -27,6 +27,14 @@ export const JSON_RIGHT = `{
   ]
 }`;
 
+export const JSONL_LEFT = `{"id":"login","level":"info","message":"User signed in","updatedAt":"2026-07-21T08:00:00Z","meta":{"region":"us-west","latency":82}}
+{"id":"checkout","level":"warn","message":"Payment retry","updatedAt":"2026-07-21T08:01:00Z","meta":{"region":"us-west","latency":240}}
+{"id":"search","level":"info","message":"Query completed","updatedAt":"2026-07-21T08:02:00Z","meta":{"region":"eu-central","latency":64}}`;
+
+export const JSONL_RIGHT = `{"id":"login","level":"info","message":"User signed in","updatedAt":"2026-07-22T09:00:00Z","meta":{"region":"us-west","latency":82}}
+{"id":"checkout","level":"error","message":"Payment failed","updatedAt":"2026-07-22T09:01:00Z","meta":{"region":"us-west","latency":510}}
+{"id":"sync","level":"info","message":"Webhook delivered","updatedAt":"2026-07-22T09:02:00Z","meta":{"region":"ap-southeast","latency":96}}`;
+
 export const CSV_LEFT = `id,name,status,total
 1001,Ada,paid,39.90
 1002,Linus,pending,18.00

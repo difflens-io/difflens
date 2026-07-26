@@ -50,6 +50,7 @@ button {
 .topbar,
 .control-band,
 .stats-band,
+.open-source-band,
 .workspace,
 .result-panel {
   max-width: 1680px;
@@ -212,6 +213,118 @@ button {
 .stats-band {
   margin-top: 10px;
   padding: 8px 10px;
+}
+
+.open-source-band {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.2fr) minmax(220px, auto) auto;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+  border: 1px solid #bfd4ee;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+}
+
+.open-source-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: #18202f;
+}
+
+.open-source-title > svg {
+  flex: 0 0 auto;
+  color: #0f172a;
+}
+
+.open-source-title strong,
+.open-source-title span {
+  display: block;
+}
+
+.open-source-title strong {
+  font-size: 14px;
+}
+
+.open-source-title span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.open-source-points,
+.open-source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.open-source-points span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  border: 1px solid #d6e4f3;
+  border-radius: 999px;
+  padding: 0 9px;
+  color: #334155;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.open-source-points svg {
+  color: var(--added);
+}
+
+.open-source-actions {
+  justify-content: flex-end;
+}
+
+.open-source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  border: 1px solid #c7d6e8;
+  border-radius: 6px;
+  padding: 0 10px;
+  color: #1f2b3d;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease,
+    color 120ms ease,
+    transform 120ms ease;
+}
+
+.open-source-link:hover {
+  border-color: var(--brand);
+  background: #eef8fb;
+  color: #064e63;
+}
+
+.open-source-link:active {
+  transform: translateY(1px);
+}
+
+.open-source-link.star {
+  border-color: #e2b84b;
+  color: #5f4300;
+  background: #fff8df;
+}
+
+.open-source-link.star:hover {
+  border-color: #c99400;
+  background: #ffefb0;
+  color: #3d2a00;
 }
 
 .toggle {
@@ -830,6 +943,14 @@ button {
 
   .toolbar,
   .result-actions {
+    justify-content: flex-start;
+  }
+
+  .open-source-band {
+    grid-template-columns: 1fr;
+  }
+
+  .open-source-actions {
     justify-content: flex-start;
   }
 

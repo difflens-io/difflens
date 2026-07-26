@@ -10,11 +10,15 @@ import {
   Copy,
   Download,
   Eraser,
+  ExternalLink,
   FileText,
+  Github,
   GripVertical,
   Link2,
   PanelRightClose,
   PanelRightOpen,
+  ShieldCheck,
+  Star,
   Table2,
   Terminal,
   Upload,
@@ -37,6 +41,8 @@ import {
   HTTP_REQUEST_LEFT,
   HTTP_REQUEST_RIGHT,
   JSON_LEFT,
+  JSONL_LEFT,
+  JSONL_RIGHT,
   JSON_RIGHT,
   MARKDOWN_LEFT,
   MARKDOWN_RIGHT,
@@ -49,6 +55,7 @@ import type { CompareResult, DiffItem, DiffOptions, DiffType, FormatMode, TextDi
 const FORMAT_OPTIONS: Array<{ value: FormatMode; label: string }> = [
   { value: 'auto', label: 'Auto' },
   { value: 'json', label: 'JSON' },
+  { value: 'jsonl', label: 'JSONL' },
   { value: 'yaml', label: 'YAML' },
   { value: 'toml', label: 'TOML' },
   { value: 'xml', label: 'XML' },
@@ -85,7 +92,7 @@ type VisibleControls = Record<
   boolean
 >;
 
-const ARRAY_KEY_FORMATS = new Set<CompareResult['kind']>(['json', 'yaml', 'toml', 'http']);
+const ARRAY_KEY_FORMATS = new Set<CompareResult['kind']>(['json', 'jsonl', 'yaml', 'toml', 'http']);
 
 export default function App() {
   const [left, setLeft] = useState(JSON_LEFT);
@@ -238,6 +245,14 @@ export default function App() {
     setFormatMode('auto');
     updateOption('csvKey', '');
     trackEvent('sample_loaded', { sample: 'json' });
+  }
+
+  function loadJsonlSample() {
+    setLeft(JSONL_LEFT);
+    setRight(JSONL_RIGHT);
+    setFormatMode('auto');
+    updateOption('csvKey', '');
+    trackEvent('sample_loaded', { sample: 'jsonl' });
   }
 
   function loadCsvSample() {
@@ -450,6 +465,46 @@ export default function App() {
         {message ? <div className="message">{message}</div> : null}
       </section>
 
+      <section className="open-source-band" aria-label="open source">
+        <div className="open-source-title">
+          <Github size={22} />
+          <div>
+            <strong>Open source on GitHub</strong>
+            <span>源码公开、MIT 许可，欢迎审查、关注和 Star</span>
+          </div>
+        </div>
+        <div className="open-source-points" aria-label="open source details">
+          <span>
+            <ShieldCheck size={15} />
+            本地对比
+          </span>
+          <span>MIT License</span>
+          <span>React + TypeScript</span>
+        </div>
+        <div className="open-source-actions">
+          <a
+            className="open-source-link"
+            href="https://github.com/difflens-io/difflens"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackEvent('open_source_link_clicked', { target: 'repository' })}
+          >
+            <ExternalLink size={16} />
+            查看源码
+          </a>
+          <a
+            className="open-source-link star"
+            href="https://github.com/difflens-io/difflens/stargazers"
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackEvent('open_source_link_clicked', { target: 'stargazers' })}
+          >
+            <Star size={16} />
+            Star DiffLens
+          </a>
+        </div>
+      </section>
+
       <section
         className={`workspace ${navigatorOpen ? 'navigator-open' : 'navigator-collapsed'}`}
         style={workspaceStyle}
@@ -584,6 +639,10 @@ export default function App() {
               <Braces size={17} />
               <span>JSON 示例</span>
             </button>
+            <button type="button" className="icon-button" onClick={loadJsonlSample}>
+              <Braces size={17} />
+              <span>JSONL 示例</span>
+            </button>
             <button type="button" className="icon-button" onClick={loadCsvSample}>
               <Table2 size={17} />
               <span>CSV 示例</span>
@@ -656,6 +715,7 @@ function controlsForResult(result: CompareResult, options: DiffOptions): Visible
     showEditorLineNumbers: true,
     enableEditorFolding:
       result.kind === 'json' ||
+      result.kind === 'jsonl' ||
       result.kind === 'markdown' ||
       result.kind === 'http' ||
       options.showDiffInEditors,

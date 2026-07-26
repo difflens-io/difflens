@@ -32,6 +32,38 @@ describe('compareInputs', () => {
     expect(result.items[0].path).toBe('$[pro].limit');
   });
 
+  it('detects JSONL and compares records by configured object key', () => {
+    const result = compareInputs(
+      [
+        '{"id":"login","level":"info","updatedAt":"old","meta":{"latency":82}}',
+        '{"id":"checkout","level":"warn","updatedAt":"old","meta":{"latency":240}}'
+      ].join('\n'),
+      [
+        '{"id":"login","level":"info","updatedAt":"new","meta":{"latency":82}}',
+        '{"id":"checkout","level":"error","updatedAt":"new","meta":{"latency":510}}',
+        '{"id":"sync","level":"info","updatedAt":"new","meta":{"latency":96}}'
+      ].join('\n'),
+      'auto',
+      DEFAULT_OPTIONS
+    );
+
+    expect(result.kind).toBe('jsonl');
+    expect(result.label).toBe('JSONL');
+    expect(result.mode).toBe('structured');
+    expect(result.items.map((item) => item.path)).toEqual([
+      '$[checkout].level',
+      '$[checkout].meta.latency',
+      '$[sync]'
+    ]);
+  });
+
+  it('forces a single JSON line as JSONL when requested', () => {
+    const result = detectFormat('{"id":"only","value":1}', 'jsonl');
+
+    expect(result.kind).toBe('jsonl');
+    expect(result.formatted).toBe('{"id":"only","value":1}');
+  });
+
   it('compares CSV cells with a primary key column', () => {
     const result = compareInputs(
       'id,name,status\n1,Ada,pending\n2,Linus,paid',

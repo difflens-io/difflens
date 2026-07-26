@@ -281,7 +281,7 @@ function buildEditorExtensions(
   ];
 
   if (options.showEditorLineNumbers) extensions.push(lineNumbers());
-  if (format === 'json') extensions.push(json());
+  if (format === 'json' || format === 'jsonl') extensions.push(json());
   if (format === 'markdown' && markdownExtension) extensions.push(markdownExtension);
   if (options.enableEditorFolding) {
     if (format === 'http') extensions.push(httpRequestFolding());

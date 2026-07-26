@@ -67,10 +67,15 @@ function escapeRegex(value: string): string {
 function pathAliasCandidates(path: string): string[] {
   const candidates = [path];
   const bodySuffix = bodyRelativeSuffix(path);
+  const arrayItemSuffix = rootArrayItemSuffix(path);
 
   if (bodySuffix !== null) {
     candidates.push(`$.body${bodySuffix}`);
     candidates.push(`$${bodySuffix}`);
+  }
+
+  if (arrayItemSuffix !== null) {
+    candidates.push(`$${arrayItemSuffix}`);
   }
 
   return [...new Set(candidates)];
@@ -80,6 +85,12 @@ function bodyRelativeSuffix(path: string): string | null {
   const match = /\.body(?=\.|\[|$)/.exec(path);
   if (!match) return null;
   return path.slice(match.index + '.body'.length);
+}
+
+function rootArrayItemSuffix(path: string): string | null {
+  const match = /^\$\[[^\]]+](?=\.|\[|$)/.exec(path);
+  if (!match) return null;
+  return path.slice(match[0].length);
 }
 
 function pathMatchesPattern(path: string, pattern: string): boolean {

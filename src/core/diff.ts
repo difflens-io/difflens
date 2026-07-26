@@ -22,6 +22,7 @@ import type {
 
 const STRUCTURED_FORMATS: FormatKind[] = [
   'json',
+  'jsonl',
   'yaml',
   'toml',
   'xml',

@@ -19,6 +19,7 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Added Cookie / Set-Cookie comparison with cookie value and attribute diffs.
 - Added Markdown auto-detection and text diffing.
 - Added TOML auto-detection, formatting, and structured diffing.
+- Added JSONL / NDJSON auto-detection, formatting, and structured diffing.
 - Added cURL support, parsing method, URL/query, headers, cookies, JSON body, form data, and options.
 - Added JetBrains / IntelliJ `.http` HTTP Request support.
 - Fixed cURL being misdetected as Cookie by raising cURL / HTTP Request auto-detection priority.
@@ -28,6 +29,7 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Added structured format output by path for added, removed, and changed items.
 - Added CSV / TSV row comparison using primary-key columns.
 - Added array object matching by key fields.
+- Added key-based JSONL record matching through the existing array key option.
 - Added ignore whitespace, ignore case, ignore field order, and ignored paths.
 - Added default ignored paths for `timestamp`, `updatedAt`, and `createdAt`.
 - Enhanced ignored path matching so HTTP / cURL JSON bodies support body-relative paths such as `$.body.profile.role` and `$.profile.role`.
@@ -43,7 +45,8 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Added JSON and HTTP Request folding.
 - Added folding of unchanged content when "diff only" is enabled.
 - Applied ignore whitespace and ignore case to in-editor diff display.
-- Enhanced ignored paths in editor diff display: ignored JSON and HTTP Request JSON body paths are no longer highlighted.
+- Enhanced ignored paths in editor diff display: ignored JSON, JSONL, and HTTP Request JSON body paths are no longer highlighted.
+- Added ignored path masking for JSONL editor diff display.
 - Added a collapsible diff item sidebar.
 - Added draggable resizing for the left and right editors.
 - Added synchronized scrolling so either editor can drive both scroll positions when enabled.
@@ -102,5 +105,7 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Added `robots.txt` and `sitemap.xml` for search engine discovery.
 - Added `llms.txt` for AI and agent-oriented product discovery.
 - Added static SEO entry pages for JSON diff, cURL diff, Cookie diff, HTTP Request diff, TOML diff, and Markdown diff.
+- Added a static JSONL diff SEO entry page.
 - Added canonical, Open Graph, Twitter Card, and WebApplication structured metadata to the main page.
 - Updated README links to drive GitHub visitors to the live site and format-specific entry pages.
+- Added a visible open-source GitHub trust strip with source, license, local-first, and Star links.

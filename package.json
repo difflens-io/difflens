@@ -1,7 +1,7 @@
 {
   "name": "difflens",
   "version": "1.0.0",
-  "description": "A local-first structured text diff tool for JSON, HTTP Request, cURL, Cookie, CSV, Markdown, TOML, and plain text.",
+  "description": "A local-first structured text diff tool for JSON, JSONL, HTTP Request, cURL, Cookie, CSV, Markdown, TOML, and plain text.",
   "license": "MIT",
   "homepage": "https://www.difflens.io/",
   "repository": {
@@ -14,6 +14,7 @@
   "keywords": [
     "diff",
     "json",
+    "jsonl",
     "http-request",
     "curl",
     "cookie",

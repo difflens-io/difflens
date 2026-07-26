@@ -17,6 +17,7 @@
 - 新增 Cookie / Set-Cookie 对比，支持 cookie 值和属性差异。
 - 新增 Markdown 自动识别和文本 diff。
 - 新增 TOML 自动识别、格式化和结构化 diff。
+- 新增 JSONL / NDJSON 自动识别、格式化和结构化 diff。
 - 新增 cURL 格式支持，解析 method、URL/query、headers、cookies、JSON body、form 和选项。
 - 新增 JetBrains / IntelliJ `.http` HTTP Request 格式支持。
 - 修复 cURL 被误识别为 Cookie 的问题，提高 cURL / HTTP Request 自动识别优先级。
@@ -26,6 +27,7 @@
 - 支持结构化格式按路径输出新增、删除、修改项。
 - 支持 CSV / TSV 通过主键列对比行。
 - 支持数组对象通过主键字段匹配。
+- 支持通过现有数组主键选项匹配 JSONL 记录。
 - 支持忽略空白、忽略大小写、忽略字段顺序。
 - 支持忽略路径，默认忽略 `timestamp`、`updatedAt`、`createdAt`。
 - 增强忽略路径匹配，使 HTTP / cURL JSON body 支持 body 相对路径，如 `$.body.profile.role` 和 `$.profile.role`。
@@ -41,7 +43,8 @@
 - 支持 JSON 和 HTTP Request 内容折叠。
 - 支持“只看差异”时折叠相同内容。
 - 输入区显示差异时应用忽略空白、忽略大小写。
-- 增强忽略路径对输入区差异显示的影响：JSON 和 HTTP Request JSON body 中被忽略路径不再高亮。
+- 增强忽略路径对输入区差异显示的影响：JSON、JSONL 和 HTTP Request JSON body 中被忽略路径不再高亮。
+- 增加 JSONL 输入区差异显示中的忽略路径遮罩。
 - 差异项侧栏增加抽屉效果，可收起/展开。
 - 左右输入区增加拖拽调宽能力。
 - 增加同步滚动开关，开启后任意一侧输入区滚动会同步另一侧。
@@ -100,5 +103,7 @@
 - 新增 `robots.txt` 和 `sitemap.xml`，方便搜索引擎发现。
 - 新增 `llms.txt`，方便 AI 和 Agent 类工具理解项目入口。
 - 新增 JSON diff、cURL diff、Cookie diff、HTTP Request diff、TOML diff、Markdown diff 的静态 SEO 入口页。
+- 新增 JSONL diff 静态 SEO 入口页。
 - 为主页面新增 canonical、Open Graph、Twitter Card 和 WebApplication 结构化元信息。
 - 更新 README 链接，把 GitHub 访问者引导到线上站点和格式入口页。
+- 新增页面内 GitHub 开源信任条，展示源码、许可、本地对比和 Star 入口。

@@ -1,8 +1,8 @@
 # DiffLens
 
-DiffLens 是一个在线文本 Diff 工具，面向 JSON、HTTP Request、cURL、Cookie、表格和普通文本等内容做本地对比。页面副标题为：`结构化文本对比(仅本地对比，内容不上传)`。
+DiffLens 是一个在线文本 Diff 工具，面向 JSON、JSONL、HTTP Request、cURL、Cookie、表格和普通文本等内容做本地对比。页面副标题为：`结构化文本对比(仅本地对比，内容不上传)`。
 
-[在线使用 DiffLens](https://www.difflens.io/) · [JSON Diff](https://www.difflens.io/json-diff/) · [cURL Diff](https://www.difflens.io/curl-diff/) · [Cookie Diff](https://www.difflens.io/cookie-diff/) · [HTTP Request Diff](https://www.difflens.io/http-request-diff/)
+[在线使用 DiffLens](https://www.difflens.io/) · [JSON Diff](https://www.difflens.io/json-diff/) · [JSONL Diff](https://www.difflens.io/jsonl-diff/) · [cURL Diff](https://www.difflens.io/curl-diff/) · [Cookie Diff](https://www.difflens.io/cookie-diff/) · [HTTP Request Diff](https://www.difflens.io/http-request-diff/)
 
 ## 在线地址
 
@@ -20,6 +20,7 @@ DiffLens 是一个在线文本 Diff 工具，面向 JSON、HTTP Request、cURL�
 ## 支持格式
 
 - JSON
+- JSONL / NDJSON
 - YAML
 - TOML
 - XML / HTML
@@ -34,6 +35,7 @@ DiffLens 是一个在线文本 Diff 工具，面向 JSON、HTTP Request、cURL�
 ## 格式入口页
 
 - [JSON Diff Online](https://www.difflens.io/json-diff/)
+- [JSONL Diff Online](https://www.difflens.io/jsonl-diff/)
 - [cURL Diff Online](https://www.difflens.io/curl-diff/)
 - [Cookie Diff Online](https://www.difflens.io/cookie-diff/)
 - [HTTP Request Diff Online](https://www.difflens.io/http-request-diff/)
@@ -42,9 +44,9 @@ DiffLens 是一个在线文本 Diff 工具，面向 JSON、HTTP Request、cURL�
 
 ## 主要特性
 
-- 字段级结构化对比：JSON、YAML、TOML、XML、HTML、Cookie、Properties、cURL、HTTP Request 使用结构化 diff。
+- 字段级结构化对比：JSON、JSONL、YAML、TOML、XML、HTML、Cookie、Properties、cURL、HTTP Request 使用结构化 diff。
 - 表格对比：CSV / TSV 支持按行和主键列对比。
-- 数组主键：JSON、YAML、TOML、HTTP Request 支持按对象主键匹配数组元素。
+- 数组主键：JSON、JSONL、YAML、TOML、HTTP Request 支持按对象主键匹配数组元素。
 - 忽略规则：支持忽略大小写、忽略空白、忽略字段顺序、忽略指定路径。
 - 长值显示：默认完整显示长值，可手动开启省略长值。
 - 值内高亮：字段值或文本行部分不一致时，只突出变化片段。
@@ -72,7 +74,7 @@ DiffLens 的对比计算在浏览器本地完成，用户粘贴、输入或导�
 
 ## 缺点与限制
 
-- 输入区的忽略路径源码定位目前重点覆盖 JSON 和 HTTP Request 的 JSON 请求体；其他格式的结果区会应用忽略路径，但输入区视觉过滤可能回退到行级 diff。
+- 输入区的忽略路径源码定位目前重点覆盖 JSON、JSONL 和 HTTP Request 的 JSON 请求体；其他格式的结果区会应用忽略路径，但输入区视觉过滤可能回退到行级 diff。
 - Markdown 和 Plain Text 按文档文本做行级 diff，不做语义级结构化解析。
 - XML / HTML 的格式化能力较弱，当前主要用于结构化解析和路径对比。
 - cURL 和 `.http` 的解析覆盖常见写法，极端 shell 语法、脚本片段或模板变量可能回退为原始字符串比较。

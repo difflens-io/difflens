@@ -25,6 +25,7 @@ export type AnalyticsEventName =
   | 'input_cleared'
   | 'inputs_swapped'
   | 'navigator_drawer_toggled'
+  | 'open_source_link_clicked'
   | 'option_changed'
   | 'sample_loaded'
   | 'sync_scroll_changed';

@@ -6,6 +6,7 @@ import type { DetectionResult, FormatKind, FormatMode, ParsedTable } from './typ
 
 const LABELS: Record<FormatKind, string> = {
   json: 'JSON',
+  jsonl: 'JSONL',
   yaml: 'YAML',
   toml: 'TOML',
   xml: 'XML',
@@ -83,6 +84,9 @@ export function detectFormat(raw: string, mode: FormatMode = 'auto'): DetectionR
   const json = tryJson(raw);
   if (json) candidates.push(json);
 
+  const jsonl = tryJsonl(raw);
+  if (jsonl) candidates.push(jsonl);
+
   const xml = tryXml(raw);
   if (xml) candidates.push(xml);
 
@@ -117,6 +121,7 @@ export function detectFormat(raw: string, mode: FormatMode = 'auto'): DetectionR
 function parseForced(raw: string, kind: FormatKind): DetectionResult {
   try {
     if (kind === 'json') return tryJson(raw, true)!;
+    if (kind === 'jsonl') return tryJsonl(raw, true)!;
     if (kind === 'yaml') return tryYaml(raw, true)!;
     if (kind === 'toml') return tryToml(raw, true)!;
     if (kind === 'xml' || kind === 'html') return tryXml(raw, true, kind)!;
@@ -156,6 +161,43 @@ function tryJson(raw: string, forced = false): DetectionResult | never | null {
     if (forced) throw error;
     return null;
   }
+}
+
+function tryJsonl(raw: string, forced = false): DetectionResult | never | null {
+  const lines = raw.replace(/\r\n/g, '\n').split('\n');
+  const records: unknown[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const text = lines[index].trim();
+    if (!text) continue;
+
+    if (!forced && !/^[{[]/.test(text)) return null;
+
+    try {
+      records.push(JSON.parse(text));
+    } catch (error) {
+      if (forced) {
+        throw new Error(`第 ${index + 1} 行不是有效 JSONL: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      return null;
+    }
+  }
+
+  if (records.length === 0) {
+    if (forced) throw new Error('JSONL 内容为空');
+    return null;
+  }
+
+  const structuredRecords = records.filter((record) => record !== null && typeof record === 'object').length;
+  if (!forced && (records.length < 2 || structuredRecords !== records.length)) return null;
+
+  return {
+    kind: 'jsonl',
+    label: LABELS.jsonl,
+    confidence: forced ? 1 : 0.94,
+    parsed: records,
+    formatted: records.map((record) => JSON.stringify(record)).join('\n')
+  };
 }
 
 function tryToml(raw: string, forced = false): DetectionResult | never | null {

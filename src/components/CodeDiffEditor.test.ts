@@ -91,4 +91,16 @@ describe('buildEditorDiffRows', () => {
 
     expect(rows.every((row) => row.type === 'equal')).toBe(true);
   });
+
+  it('does not mark ignored JSONL field changes in editor diff rows', () => {
+    const rows = buildEditorDiffRows(
+      '{"id":"a","updatedAt":"old"}\n{"id":"b","updatedAt":"old"}',
+      '{"id":"a","updatedAt":"new"}\n{"id":"b","updatedAt":"new"}',
+      'jsonl',
+      'jsonl',
+      { ...DEFAULT_OPTIONS, ignoredPaths: ['$.updatedAt'] }
+    );
+
+    expect(rows.every((row) => row.type === 'equal')).toBe(true);
+  });
 });

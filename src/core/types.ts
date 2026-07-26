@@ -1,5 +1,6 @@
 export type FormatKind =
   | 'json'
+  | 'jsonl'
   | 'yaml'
   | 'toml'
   | 'xml'

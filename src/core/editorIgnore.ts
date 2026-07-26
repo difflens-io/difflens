@@ -42,6 +42,10 @@ export function ignoredPathSpansForEditor(
     return collectJsonIgnoredSpans(value, '$', 0, patterns);
   }
 
+  if (format === 'jsonl') {
+    return collectJsonlIgnoredSpans(value, patterns);
+  }
+
   if (format === 'http') {
     return collectHttpJsonBodyIgnoredSpans(value, patterns);
   }
@@ -86,6 +90,29 @@ function collectJsonIgnoredSpans(
   } catch {
     return [];
   }
+}
+
+function collectJsonlIgnoredSpans(value: string, patterns: string[]): IgnoredSpan[] {
+  const spans: IgnoredSpan[] = [];
+  let recordIndex = 0;
+
+  for (const line of splitSourceLines(value)) {
+    const leadingWhitespace = line.text.match(/^\s*/)?.[0].length ?? 0;
+    const trimmed = line.text.trim();
+    if (!trimmed) continue;
+
+    spans.push(
+      ...collectJsonIgnoredSpans(
+        trimmed,
+        `$[${recordIndex}]`,
+        line.from + leadingWhitespace,
+        patterns
+      )
+    );
+    recordIndex += 1;
+  }
+
+  return spans;
 }
 
 function collectHttpJsonBodyIgnoredSpans(value: string, patterns: string[]): IgnoredSpan[] {

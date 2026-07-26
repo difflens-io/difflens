@@ -6,7 +6,7 @@ Website: https://www.difflens.io/
 GitHub: https://github.com/difflens-io/difflens
 
 Key capabilities:
-- Compare JSON, YAML, TOML, XML, HTML, Markdown, cURL, HTTP Request, CSV, TSV, Cookie, Set-Cookie, Java Properties, and plain text.
+- Compare JSON, JSONL, NDJSON, YAML, TOML, XML, HTML, Markdown, cURL, HTTP Request, CSV, TSV, Cookie, Set-Cookie, Java Properties, and plain text.
 - Highlight field-level differences for structured formats.
 - Highlight inline value fragments when values partially differ.
 - Compare content in the browser without uploading user comparison text.
@@ -14,6 +14,7 @@ Key capabilities:
 
 Useful entry pages:
 - JSON diff: https://www.difflens.io/json-diff/
+- JSONL diff: https://www.difflens.io/jsonl-diff/
 - cURL diff: https://www.difflens.io/curl-diff/
 - Cookie diff: https://www.difflens.io/cookie-diff/
 - HTTP Request diff: https://www.difflens.io/http-request-diff/

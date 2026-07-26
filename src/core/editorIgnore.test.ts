@@ -36,4 +36,26 @@ Content-Type: application/json
       maskIgnoredPathRanges(right, 'http', ['$.requests[Create user].body.profile.role'])
     );
   });
+
+  it('masks ignored JSONL record fields with root-relative paths', () => {
+    const left = [
+      '{"id":"a","name":"Ada","updatedAt":"old"}',
+      '{"id":"b","name":"Grace","updatedAt":"old"}'
+    ].join('\n');
+    const right = [
+      '{"id":"a","name":"Ada","updatedAt":"new"}',
+      '{"id":"b","name":"Grace","updatedAt":"new"}'
+    ].join('\n');
+    const changed = [
+      '{"id":"a","name":"Ada","updatedAt":"new"}',
+      '{"id":"b","name":"Linus","updatedAt":"new"}'
+    ].join('\n');
+
+    expect(maskIgnoredPathRanges(left, 'jsonl', ['$.updatedAt'])).toBe(
+      maskIgnoredPathRanges(right, 'jsonl', ['$.updatedAt'])
+    );
+    expect(maskIgnoredPathRanges(left, 'jsonl', ['$.updatedAt'])).not.toBe(
+      maskIgnoredPathRanges(changed, 'jsonl', ['$.updatedAt'])
+    );
+  });
 });

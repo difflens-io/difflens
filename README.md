@@ -1,8 +1,8 @@
 # DiffLens
 
-DiffLens is an online text diff tool for local comparison of JSON, HTTP Request, cURL, Cookie, tabular data, and plain text. Its product subtitle is: `Structured text diff (local-only comparison, content is not uploaded)`.
+DiffLens is an online text diff tool for local comparison of JSON, JSONL, HTTP Request, cURL, Cookie, tabular data, and plain text. Its product subtitle is: `Structured text diff (local-only comparison, content is not uploaded)`.
 
-[Try DiffLens Online](https://www.difflens.io/) · [JSON Diff](https://www.difflens.io/json-diff/) · [cURL Diff](https://www.difflens.io/curl-diff/) · [Cookie Diff](https://www.difflens.io/cookie-diff/) · [HTTP Request Diff](https://www.difflens.io/http-request-diff/)
+[Try DiffLens Online](https://www.difflens.io/) · [JSON Diff](https://www.difflens.io/json-diff/) · [JSONL Diff](https://www.difflens.io/jsonl-diff/) · [cURL Diff](https://www.difflens.io/curl-diff/) · [Cookie Diff](https://www.difflens.io/cookie-diff/) · [HTTP Request Diff](https://www.difflens.io/http-request-diff/)
 
 [中文版](README.zh-CN.md)
 
@@ -22,6 +22,7 @@ DiffLens is an online text diff tool for local comparison of JSON, HTTP Request,
 ## Supported Formats
 
 - JSON
+- JSONL / NDJSON
 - YAML
 - TOML
 - XML / HTML
@@ -36,6 +37,7 @@ DiffLens is an online text diff tool for local comparison of JSON, HTTP Request,
 ## Format Entry Pages
 
 - [JSON Diff Online](https://www.difflens.io/json-diff/)
+- [JSONL Diff Online](https://www.difflens.io/jsonl-diff/)
 - [cURL Diff Online](https://www.difflens.io/curl-diff/)
 - [Cookie Diff Online](https://www.difflens.io/cookie-diff/)
 - [HTTP Request Diff Online](https://www.difflens.io/http-request-diff/)
@@ -44,9 +46,9 @@ DiffLens is an online text diff tool for local comparison of JSON, HTTP Request,
 
 ## Main Capabilities
 
-- Field-level structured diff: JSON, YAML, TOML, XML, HTML, Cookie, Properties, cURL, and HTTP Request use structured diffing.
+- Field-level structured diff: JSON, JSONL, YAML, TOML, XML, HTML, Cookie, Properties, cURL, and HTTP Request use structured diffing.
 - Tabular diff: CSV / TSV support row-based and primary-key-column comparison.
-- Array keys: JSON, YAML, TOML, and HTTP Request can match array objects by key fields.
+- Array keys: JSON, JSONL, YAML, TOML, and HTTP Request can match array objects by key fields.
 - Ignore rules: ignore case, whitespace, field order, and specified paths.
 - Long value display: long values are shown in full by default, with an option to truncate them.
 - Inline value highlights: when field values or text lines partially differ, only the changed fragments are highlighted.
@@ -74,7 +76,7 @@ The hosted site can optionally include GA4 and Baidu Analytics for page-visit me
 
 ## Limitations
 
-- Ignored-path source mapping in the editors focuses on JSON and HTTP Request JSON bodies. Other formats apply ignored paths in the result view, while editor-side visual filtering may fall back to line-level diffing.
+- Ignored-path source mapping in the editors focuses on JSON, JSONL, and HTTP Request JSON bodies. Other formats apply ignored paths in the result view, while editor-side visual filtering may fall back to line-level diffing.
 - Markdown and Plain Text use document line diffing instead of semantic structural parsing.
 - XML / HTML formatting is limited; current support focuses on parsing and path-based comparison.
 - cURL and `.http` parsing cover common syntax. Unusual shell syntax, script fragments, or template variables may fall back to raw string comparison.
