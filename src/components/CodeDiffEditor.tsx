@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState }
 import { diffLines } from 'diff';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { json } from '@codemirror/lang-json';
-import { foldGutter, foldKeymap, foldService } from '@codemirror/language';
+import { foldGutter, foldedRanges, foldKeymap, foldService, unfoldEffect } from '@codemirror/language';
 import { EditorState, StateEffect, StateField, type Extension } from '@codemirror/state';
 import {
   Decoration,
@@ -18,6 +18,7 @@ import {
   maskIgnoredPathRanges,
   type IgnoredSpan
 } from '../core/editorIgnore';
+import type { EditorTarget } from '../core/editorTargets';
 import { buildInlineDiff } from '../core/inlineDiff';
 import type { DiffOptions, FormatKind, TextDiffRow } from '../core/types';
 
@@ -31,6 +32,7 @@ interface CodeDiffEditorProps {
   format: FormatKind;
   otherFormat: FormatKind;
   options: DiffOptions;
+  selectedTarget?: EditorTarget;
   onChange: (value: string) => void;
   onScroll?: (side: EditorSide, metrics: EditorScrollMetrics) => void;
 }
@@ -88,6 +90,7 @@ export interface EditorScrollMetrics {
 export interface CodeDiffEditorHandle {
   scrollToRatio: (topRatio: number, leftRatio: number) => void;
   scrollToLine: (lineNumber?: number) => void;
+  scrollToTarget: (target?: EditorTarget) => void;
 }
 
 export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorProps>(function CodeDiffEditor({
@@ -97,6 +100,7 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
   format,
   otherFormat,
   options,
+  selectedTarget,
   onChange,
   onScroll
 }, ref) {
@@ -124,10 +128,12 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
       if (!view || !lineNumber || lineNumber < 1 || lineNumber > view.state.doc.lines) return;
 
       const line = view.state.doc.line(lineNumber);
-      view.dispatch({
-        selection: { anchor: line.from },
-        effects: EditorView.scrollIntoView(line.from, { y: 'center' })
-      });
+      scrollViewToTarget(view, { line: lineNumber, from: line.from, to: line.to });
+    },
+    scrollToTarget(target?: EditorTarget) {
+      const view = viewRef.current;
+      if (!view || !target) return;
+      scrollViewToTarget(view, target);
     }
   }), []);
 
@@ -221,7 +227,8 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
           side,
           format,
           otherFormat,
-          options
+          options,
+          selectedTarget
         })
       )
     });
@@ -237,7 +244,8 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
     options.ignoreWhitespace,
     options.onlyChanges,
     options.enableEditorFolding,
-    options.ignoredPaths
+    options.ignoredPaths,
+    selectedTarget
   ]);
 
   return <div ref={hostRef} className="code-diff-editor" />;
@@ -301,6 +309,37 @@ function buildEditorExtensions(
   }
 
   return extensions;
+}
+
+function scrollViewToTarget(view: EditorView, target: EditorTarget): void {
+  if (target.line < 1 || target.line > view.state.doc.lines) return;
+
+  const line = view.state.doc.line(target.line);
+  const from = clampPosition(view.state, target.from ?? line.from);
+  const to = clampPosition(view.state, target.to ?? line.to);
+  const unfoldEffects = foldedRangeEffects(view.state, from, to);
+
+  view.dispatch({
+    selection: { anchor: from },
+    effects: [
+      ...unfoldEffects,
+      EditorView.scrollIntoView(from, { y: 'center' })
+    ]
+  });
+}
+
+function foldedRangeEffects(state: EditorState, from: number, to: number) {
+  const effects: StateEffect<unknown>[] = [];
+  foldedRanges(state).between(0, state.doc.length, (rangeFrom, rangeTo) => {
+    if (rangeFrom <= to && rangeTo >= from) {
+      effects.push(unfoldEffect.of({ from: rangeFrom, to: rangeTo }));
+    }
+  });
+  return effects;
+}
+
+function clampPosition(state: EditorState, position: number): number {
+  return Math.max(0, Math.min(state.doc.length, position));
 }
 
 export function jsonlFolding(): Extension {
@@ -484,7 +523,8 @@ function buildDiffDecorations({
   side,
   format,
   otherFormat,
-  options
+  options,
+  selectedTarget
 }: {
   state: EditorState;
   value: string;
@@ -493,9 +533,8 @@ function buildDiffDecorations({
   format: FormatKind;
   otherFormat: FormatKind;
   options: DiffOptions;
+  selectedTarget?: EditorTarget;
 }): DecorationSet {
-  if (!options.showDiffInEditors) return Decoration.none;
-
   const leftValue = side === 'left' ? value : otherValue;
   const rightValue = side === 'left' ? otherValue : value;
   const leftFormat = side === 'left' ? format : otherFormat;
@@ -515,59 +554,82 @@ function buildDiffDecorations({
     ? foldedEqualRanges(rows, side)
     : [];
 
-  for (const range of foldedRanges) {
-    const fromLine = safeLine(state, range.from);
-    const toLine = safeLine(state, range.to);
-    if (!fromLine || !toLine) continue;
+  if (options.showDiffInEditors) {
+    for (const range of foldedRanges) {
+      const fromLine = safeLine(state, range.from);
+      const toLine = safeLine(state, range.to);
+      if (!fromLine || !toLine) continue;
 
-    decorations.push(
-      Decoration.replace({
-        block: true,
-        widget: new FoldedUnchangedWidget(range.count)
-      }).range(fromLine.from, toLine.to)
-    );
-  }
-
-  for (const row of rows) {
-    const lineNumber = side === 'left' ? row.leftLine : row.rightLine;
-    if (!lineNumber || isLineFolded(lineNumber, foldedRanges)) continue;
-
-    const line = safeLine(state, lineNumber);
-    if (!line) continue;
-    if (isIgnoredOnlyEditorRow(row, side, lineNumber, maskedDisplayLines, displayIgnoredSpans, line)) {
-      continue;
+      decorations.push(
+        Decoration.replace({
+          block: true,
+          widget: new FoldedUnchangedWidget(range.count)
+        }).range(fromLine.from, toLine.to)
+      );
     }
 
-    decorations.push(
-      Decoration.line({
-        class: `cm-diff-line cm-diff-${row.type}`
-      }).range(line.from)
-    );
+    for (const row of rows) {
+      const lineNumber = side === 'left' ? row.leftLine : row.rightLine;
+      if (!lineNumber || isLineFolded(lineNumber, foldedRanges)) continue;
 
-    if (
-      row.type === 'modified' &&
-      options.highlightInlineChanges &&
-      row.leftLine &&
-      row.rightLine
-    ) {
-      const leftText = leftLines[row.leftLine - 1] ?? '';
-      const rightText = rightLines[row.rightLine - 1] ?? '';
-      const inline = buildInlineDiff(leftText, rightText);
-      const parts = side === 'left' ? inline.left : inline.right;
-      let offset = 0;
+      const line = safeLine(state, lineNumber);
+      if (!line) continue;
+      if (isIgnoredOnlyEditorRow(row, side, lineNumber, maskedDisplayLines, displayIgnoredSpans, line)) {
+        continue;
+      }
 
-      for (const part of parts) {
-        const from = line.from + offset;
-        const to = from + part.text.length;
-        offset += part.text.length;
+      decorations.push(
+        Decoration.line({
+          class: `cm-diff-line cm-diff-${row.type}`
+        }).range(line.from)
+      );
 
-        if (!part.changed || from === to) continue;
+      if (
+        row.type === 'modified' &&
+        options.highlightInlineChanges &&
+        row.leftLine &&
+        row.rightLine
+      ) {
+        const leftText = leftLines[row.leftLine - 1] ?? '';
+        const rightText = rightLines[row.rightLine - 1] ?? '';
+        const inline = buildInlineDiff(leftText, rightText);
+        const parts = side === 'left' ? inline.left : inline.right;
+        let offset = 0;
+
+        for (const part of parts) {
+          const from = line.from + offset;
+          const to = from + part.text.length;
+          offset += part.text.length;
+
+          if (!part.changed || from === to) continue;
+          decorations.push(
+            ...inlineMarkRanges(from, Math.min(to, line.to), displayIgnoredSpans).map((range) =>
+              Decoration.mark({
+                class: `cm-inline-diff cm-inline-${part.kind ?? 'modified'}`
+              }).range(range.from, range.to)
+            )
+          );
+        }
+      }
+    }
+  }
+
+  if (selectedTarget) {
+    const line = safeLine(state, selectedTarget.line);
+    if (line) {
+      decorations.push(
+        Decoration.line({
+          class: 'cm-selected-diff-line'
+        }).range(line.from)
+      );
+
+      const from = Math.max(line.from, Math.min(line.to, selectedTarget.from ?? line.from));
+      const to = Math.max(from, Math.min(line.to, selectedTarget.to ?? line.to));
+      if (from < to) {
         decorations.push(
-          ...inlineMarkRanges(from, Math.min(to, line.to), displayIgnoredSpans).map((range) =>
-            Decoration.mark({
-              class: `cm-inline-diff cm-inline-${part.kind ?? 'modified'}`
-            }).range(range.from, range.to)
-          )
+          Decoration.mark({
+            class: 'cm-selected-diff-token'
+          }).range(from, to)
         );
       }
     }

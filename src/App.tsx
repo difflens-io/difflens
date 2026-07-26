@@ -36,6 +36,7 @@ import {
 } from './components/CodeDiffEditor';
 import { trackEvent } from './core/analytics';
 import { compareInputs, DEFAULT_OPTIONS, preview } from './core/diff';
+import { targetForDiffItem, type EditorTarget } from './core/editorTargets';
 import {
   COOKIE_LEFT,
   COOKIE_RIGHT,
@@ -143,6 +144,19 @@ export default function App() {
       ).filter((row) => row.type !== 'equal'),
     [left, right, result.leftDetection.kind, result.rightDetection.kind, options]
   );
+  const selectedTargets = useMemo(() => {
+    if (selectedIndex < 0) return {};
+    return targetsForDiffIndex(selectedIndex);
+  }, [
+    selectedIndex,
+    left,
+    right,
+    result.items,
+    result.leftDetection.kind,
+    result.rightDetection.kind,
+    editorDiffRows,
+    options
+  ]);
 
   function updateOption<K extends keyof DiffOptions>(key: K, value: DiffOptions[K]) {
     setOptions((current) => ({ ...current, [key]: value }));
@@ -210,15 +224,38 @@ export default function App() {
   }
 
   function scrollEditorsToDiffIndex(index: number) {
-    if (editorDiffRows.length === 0) return;
-
-    const row = editorDiffRows[Math.min(index, editorDiffRows.length - 1)];
+    const targets = targetsForDiffIndex(index);
     syncingScrollRef.current = true;
-    leftEditorRef.current?.scrollToLine(row.leftLine);
-    rightEditorRef.current?.scrollToLine(row.rightLine);
+    leftEditorRef.current?.scrollToTarget(targets.left);
+    rightEditorRef.current?.scrollToTarget(targets.right);
     window.setTimeout(() => {
       syncingScrollRef.current = false;
     }, 120);
+  }
+
+  function targetsForDiffIndex(index: number): { left?: EditorTarget; right?: EditorTarget } {
+    const item = result.items[index];
+    if (!item) return {};
+
+    const fallbackRow = editorDiffRows[Math.min(index, Math.max(0, editorDiffRows.length - 1))];
+    return {
+      left: targetForDiffItem({
+        value: left,
+        format: result.leftDetection.kind,
+        item,
+        side: 'left',
+        options,
+        fallbackRow
+      }),
+      right: targetForDiffItem({
+        value: right,
+        format: result.rightDetection.kind,
+        item,
+        side: 'right',
+        options,
+        fallbackRow
+      })
+    };
   }
 
   function toggleUtilityPanel(panel: Exclude<UtilityPanel, null>) {
@@ -385,16 +422,33 @@ export default function App() {
             <span>剪贴板对比</span>
           </button>
 
-          <button type="button" className="icon-button" onClick={() => selectRelative(-1)}>
-            <ArrowUp size={17} />
-            <span>上一个</span>
-          </button>
-          <button type="button" className="icon-button" onClick={() => selectRelative(1)}>
-            <ArrowDown size={17} />
-            <span>下一个</span>
-          </button>
         </div>
       </header>
+
+      <nav className="floating-diff-nav" aria-label="diff navigation">
+        <button
+          type="button"
+          className="square-button"
+          title="上一个差异"
+          disabled={result.items.length === 0}
+          onClick={() => selectRelative(-1)}
+        >
+          <ArrowUp size={17} />
+        </button>
+        <span className="floating-diff-count">
+          <strong>{selectedIndex >= 0 ? selectedIndex + 1 : 0}</strong>
+          <span>/{result.items.length}</span>
+        </span>
+        <button
+          type="button"
+          className="square-button"
+          title="下一个差异"
+          disabled={result.items.length === 0}
+          onClick={() => selectRelative(1)}
+        >
+          <ArrowDown size={17} />
+        </button>
+      </nav>
 
       <section className={`utility-band ${utilityPanel ? 'expanded' : ''}`} aria-label="overview and controls">
         <div className="utility-summary">
@@ -607,6 +661,7 @@ export default function App() {
             error={result.leftDetection.error}
             inputRef={leftInputRef}
             editorRef={leftEditorRef}
+            selectedTarget={selectedTargets.left}
             onChange={setLeft}
             onFile={(files) => loadFiles('left', files)}
             onEditorScroll={handleEditorScroll}
@@ -683,6 +738,7 @@ export default function App() {
             error={result.rightDetection.error}
             inputRef={rightInputRef}
             editorRef={rightEditorRef}
+            selectedTarget={selectedTargets.right}
             onChange={setRight}
             onFile={(files) => loadFiles('right', files)}
             onEditorScroll={handleEditorScroll}
@@ -886,6 +942,7 @@ function EditorPane({
   error,
   inputRef,
   editorRef,
+  selectedTarget,
   onChange,
   onFile,
   onEditorScroll
@@ -900,6 +957,7 @@ function EditorPane({
   error?: string;
   inputRef: RefObject<HTMLInputElement | null>;
   editorRef: RefObject<CodeDiffEditorHandle | null>;
+  selectedTarget?: EditorTarget;
   onChange: (value: string) => void;
   onFile: (files: FileList | null) => void;
   onEditorScroll: (side: 'left' | 'right', metrics: EditorScrollMetrics) => void;
@@ -936,6 +994,7 @@ function EditorPane({
         format={side === 'left' ? result.leftDetection.kind : result.rightDetection.kind}
         otherFormat={side === 'left' ? result.rightDetection.kind : result.leftDetection.kind}
         options={options}
+        selectedTarget={selectedTarget}
         onChange={onChange}
         onScroll={onEditorScroll}
       />

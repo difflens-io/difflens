@@ -182,6 +182,12 @@ button {
   background: #f8fbff;
 }
 
+.icon-button:disabled,
+.square-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
 .icon-button:active,
 .square-button:active {
   transform: translateY(1px);
@@ -279,6 +285,38 @@ button {
 
 .utility-toggle:active {
   transform: translateY(1px);
+}
+
+.floating-diff-nav {
+  position: fixed;
+  top: 50%;
+  right: 18px;
+  z-index: 30;
+  display: flex;
+  width: 42px;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #c9d7e8;
+  border-radius: 8px;
+  padding: 7px 4px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  transform: translateY(-50%);
+}
+
+.floating-diff-count {
+  display: grid;
+  min-width: 34px;
+  place-items: center;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.15;
+}
+
+.floating-diff-count strong {
+  color: #1f2b3d;
+  font-size: 13px;
 }
 
 .utility-drawer {
@@ -777,6 +815,18 @@ button {
   background: var(--modified-bg);
 }
 
+.cm-line.cm-selected-diff-line {
+  background: #dff4ff;
+  box-shadow: inset 3px 0 0 var(--focus);
+}
+
+.cm-selected-diff-token {
+  border-radius: 3px;
+  background: #9ee7ff;
+  color: #083344;
+  font-weight: 800;
+}
+
 .cm-inline-diff {
   border-radius: 3px;
   box-decoration-break: clone;
@@ -1067,6 +1117,16 @@ button {
 @media (max-width: 820px) {
   .app-shell {
     padding: 10px;
+  }
+
+  .floating-diff-nav {
+    top: auto;
+    right: 12px;
+    bottom: 12px;
+    flex-direction: row;
+    width: auto;
+    padding: 5px;
+    transform: none;
   }
 
   .editors {

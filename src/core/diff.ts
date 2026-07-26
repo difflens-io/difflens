@@ -40,7 +40,7 @@ export const DEFAULT_OPTIONS: DiffOptions = {
   ignoreKeyOrder: true,
   highlightInlineChanges: true,
   abbreviateLongValues: false,
-  showDiffInEditors: false,
+  showDiffInEditors: true,
   showEditorLineNumbers: true,
   enableEditorFolding: true,
   onlyChanges: false,

@@ -22,6 +22,10 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Replaced the always-visible controls, stats, and open-source bands with a compact summary bar and one-at-a-time drawers.
 - Kept format and total diff count visible while moving detailed controls, stats, and GitHub trust content behind focused toggles.
 - Updated previous / next diff navigation and diff item selection to scroll the input editors to the corresponding changed lines.
+- Enabled in-editor diff display by default.
+- Moved previous / next diff navigation into a fixed floating control so it remains available after the page scrolls.
+- Added path-based editor targeting for structured diffs, including JSON, JSONL, HTTP Request bodies, cURL, Cookie, Properties, TOML, YAML, and text line diffs.
+- Added selected-diff highlighting in the input editors and auto-unfolding of folded editor ranges before jumping to a target.
 
 ## 2026-07-24
 
