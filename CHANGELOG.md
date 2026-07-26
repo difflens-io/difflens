@@ -26,6 +26,8 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Moved previous / next diff navigation into a fixed floating control so it remains available after the page scrolls.
 - Added path-based editor targeting for structured diffs, including JSON, JSONL, HTTP Request bodies, cURL, Cookie, Properties, TOML, YAML, and text line diffs.
 - Added selected-diff highlighting in the input editors and auto-unfolding of folded editor ranges before jumping to a target.
+- Fixed the diff navigator list height so long diff lists scroll inside the sidebar instead of leaving unusable blank space.
+- Kept the diff sidebar collapse and expand control at the same top position and moved the floating diff navigation away from the sidebar toggle.
 
 ## 2026-07-24
 

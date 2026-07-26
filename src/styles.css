@@ -290,7 +290,7 @@ button {
 .floating-diff-nav {
   position: fixed;
   top: 50%;
-  right: 18px;
+  right: var(--floating-nav-right, 18px);
   z-index: 30;
   display: flex;
   width: 42px;
@@ -857,8 +857,11 @@ button {
 }
 
 .navigator {
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   min-height: 446px;
+  max-height: 678px;
   transition:
     width 160ms ease,
     opacity 160ms ease;
@@ -876,14 +879,15 @@ button {
 }
 
 .navigator.collapsed .panel-title {
-  min-height: 100%;
+  min-height: 48px;
   justify-content: center;
   border-bottom: 0;
-  padding: 7px 4px;
+  padding: 6px 4px;
 }
 
 .diff-nav-list {
-  max-height: 400px;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
   padding: 8px;
 }
@@ -1101,9 +1105,14 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .floating-diff-nav {
+    right: 18px;
+  }
+
   .navigator {
     order: 2;
     min-height: 0;
+    max-height: 360px;
   }
 
   .navigator.collapsed .panel-title {
