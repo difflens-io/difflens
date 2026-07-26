@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
@@ -34,9 +34,11 @@ import {
   Wand2
 } from 'lucide-react';
 import {
-  buildEditorDiffRows,
+  buildEmptyEditorDiffModel,
+  buildEditorDiffModel,
   CodeDiffEditor,
   type CodeDiffEditorHandle,
+  type EditorDiffModel,
   type EditorScrollMetrics
 } from './components/CodeDiffEditor';
 import { trackEvent } from './core/analytics';
@@ -105,6 +107,7 @@ type VisibleControls = Record<
 
 const ARRAY_KEY_FORMATS = new Set<CompareResult['kind']>(['json', 'jsonl', 'yaml', 'toml', 'http']);
 const GITHUB_REPOSITORY_URL = 'https://github.com/difflens-io/difflens';
+const LARGE_EDITOR_DIFF_LIMIT = 1024 * 1024;
 type UtilityPanel = 'controls' | 'stats' | 'source' | null;
 
 export default function App() {
@@ -124,10 +127,13 @@ export default function App() {
   const rightEditorRef = useRef<CodeDiffEditorHandle | null>(null);
   const editorsRef = useRef<HTMLDivElement | null>(null);
   const syncingScrollRef = useRef(false);
+  const deferredLeft = useDeferredValue(left);
+  const deferredRight = useDeferredValue(right);
+  const comparePending = deferredLeft !== left || deferredRight !== right;
 
   const result = useMemo(
-    () => compareInputs(left, right, formatMode, options),
-    [left, right, formatMode, options]
+    () => compareInputs(deferredLeft, deferredRight, formatMode, options),
+    [deferredLeft, deferredRight, formatMode, options]
   );
   const visibleControls = controlsForResult(result, options);
   const workspaceStyle = {
@@ -137,18 +143,45 @@ export default function App() {
     '--left-editor-size': `${editorSplit}fr`,
     '--right-editor-size': `${100 - editorSplit}fr`
   } as CSSProperties;
+  const largeEditorDiffSuspended =
+    options.showDiffInEditors && left.length + right.length > LARGE_EDITOR_DIFF_LIMIT;
+  const editorDiffSuspended = options.showDiffInEditors && (largeEditorDiffSuspended || comparePending);
+  const editorOptions = useMemo(
+    () =>
+      editorDiffSuspended
+        ? {
+            ...options,
+            showDiffInEditors: false,
+            enableEditorFolding: false,
+            onlyChanges: false,
+            highlightInlineChanges: false
+          }
+        : options,
+    [editorDiffSuspended, options]
+  );
+  const displayMessage = comparePending
+    ? '正在更新对比...'
+    : largeEditorDiffSuspended
+      ? '大文件模式：输入区实时差异已暂停，结果区仍正常对比'
+      : message;
 
   const selectedIndex = result.items.findIndex((item) => item.id === selectedId);
-  const editorDiffRows = useMemo(
+  const editorDiffModel = useMemo(
     () =>
-      buildEditorDiffRows(
-        left,
-        right,
-        result.leftDetection.kind,
-        result.rightDetection.kind,
-        options
-      ).filter((row) => row.type !== 'equal'),
-    [left, right, result.leftDetection.kind, result.rightDetection.kind, options]
+      editorOptions.showDiffInEditors
+        ? buildEditorDiffModel(
+            left,
+            right,
+            result.leftDetection.kind,
+            result.rightDetection.kind,
+            editorOptions
+          )
+        : buildEmptyEditorDiffModel(left, right),
+    [left, right, result.leftDetection.kind, result.rightDetection.kind, editorOptions]
+  );
+  const editorDiffRows = useMemo(
+    () => editorDiffModel.rows.filter((row) => row.type !== 'equal'),
+    [editorDiffModel]
   );
   const selectedTargets = useMemo(() => {
     if (selectedIndex < 0) return {};
@@ -471,7 +504,7 @@ export default function App() {
               <span>差异</span>
               <strong>{result.stats.total}</strong>
             </span>
-            {message ? <span className="summary-message">{message}</span> : null}
+            {displayMessage ? <span className="summary-message">{displayMessage}</span> : null}
           </div>
           <div className="utility-actions">
             <UtilityToggle
@@ -666,9 +699,10 @@ export default function App() {
             value={left}
             otherValue={right}
             result={result}
-            options={options}
+            options={editorOptions}
             detection={`${result.leftDetection.label}${result.leftDetection.error ? ' 解析失败' : ''}`}
             error={result.leftDetection.error}
+            editorDiffModel={editorDiffModel}
             inputRef={leftInputRef}
             editorRef={leftEditorRef}
             selectedTarget={selectedTargets.left}
@@ -743,9 +777,10 @@ export default function App() {
             value={right}
             otherValue={left}
             result={result}
-            options={options}
+            options={editorOptions}
             detection={`${result.rightDetection.label}${result.rightDetection.error ? ' 解析失败' : ''}`}
             error={result.rightDetection.error}
+            editorDiffModel={editorDiffModel}
             inputRef={rightInputRef}
             editorRef={rightEditorRef}
             selectedTarget={selectedTargets.right}
@@ -950,6 +985,7 @@ function EditorPane({
   options,
   detection,
   error,
+  editorDiffModel,
   inputRef,
   editorRef,
   selectedTarget,
@@ -965,6 +1001,7 @@ function EditorPane({
   options: DiffOptions;
   detection: string;
   error?: string;
+  editorDiffModel: EditorDiffModel;
   inputRef: RefObject<HTMLInputElement | null>;
   editorRef: RefObject<CodeDiffEditorHandle | null>;
   selectedTarget?: EditorTarget;
@@ -1004,6 +1041,7 @@ function EditorPane({
         format={side === 'left' ? result.leftDetection.kind : result.rightDetection.kind}
         otherFormat={side === 'left' ? result.rightDetection.kind : result.leftDetection.kind}
         options={options}
+        diffModel={editorDiffModel}
         selectedTarget={selectedTarget}
         onChange={onChange}
         onScroll={onEditorScroll}

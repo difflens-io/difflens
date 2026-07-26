@@ -5,7 +5,6 @@ import {
   isPlainObject,
   normalizeScalar,
   normalizeText,
-  normalizeValue,
   stableStringify
 } from './normalize';
 import type {
@@ -127,10 +126,6 @@ function diffValues(
 ): void {
   if (isIgnoredPath(path, options.ignoredPaths)) return;
 
-  if (stableStringify(normalizeValue(left, options)) === stableStringify(normalizeValue(right, options))) {
-    return;
-  }
-
   if (left === undefined) {
     items.push(createItem('added', path, undefined, right));
     return;
@@ -154,7 +149,31 @@ function diffValues(
     return;
   }
 
+  if (valuesEquivalent(left, right, options)) return;
+
   items.push(createItem('modified', path, left, right));
+}
+
+function valuesEquivalent(left: unknown, right: unknown, options: DiffOptions): boolean {
+  if (left === right) return true;
+
+  if (typeof left === 'string' || typeof right === 'string') {
+    return (
+      typeof left === 'string' &&
+      typeof right === 'string' &&
+      normalizeScalar(left, options) === normalizeScalar(right, options)
+    );
+  }
+
+  if (left instanceof Date || right instanceof Date) {
+    return left instanceof Date && right instanceof Date && left.getTime() === right.getTime();
+  }
+
+  if (typeof left === 'object' || typeof right === 'object') {
+    return stableStringify(left) === stableStringify(right);
+  }
+
+  return false;
 }
 
 function diffArrays(

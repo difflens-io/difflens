@@ -60,6 +60,10 @@ export function maskIgnoredPathRanges(
   patterns: string[]
 ): string {
   const spans = ignoredPathSpansForEditor(value, format, patterns);
+  return maskIgnoredSpans(value, spans);
+}
+
+export function maskIgnoredSpans(value: string, spans: IgnoredSpan[]): string {
   if (spans.length === 0) return value;
 
   let output = '';
@@ -307,7 +311,7 @@ class JsonPathScanner {
     if (char === '{') return this.parseObject(path, start);
     if (char === '[') return this.parseArray(path, start);
     if (char === '"') {
-      this.parseString();
+      this.skipString();
       return { from: start, to: this.position };
     }
     if (char === '-' || /\d/.test(char)) return this.parseNumber(start);
@@ -327,7 +331,7 @@ class JsonPathScanner {
     while (this.position < this.source.length) {
       this.skipWhitespace();
       const propertyStart = this.position;
-      const key = this.parseString();
+      const key = this.parseStringValue();
       const childPath = `${path}.${escapePathSegment(key)}`;
 
       this.skipWhitespace();
@@ -386,15 +390,40 @@ class JsonPathScanner {
     throw new Error('Unterminated JSON array');
   }
 
-  private parseString(): string {
+  private parseStringValue(): string {
     const start = this.position;
+    this.expect('"');
+    const valueStart = this.position;
+    let escaped = false;
+
+    while (this.position < this.source.length) {
+      const char = this.source[this.position];
+      if (char === '"') {
+        const value = this.source.slice(valueStart, this.position);
+        this.position += 1;
+        return escaped ? JSON.parse(this.source.slice(start, this.position)) as string : value;
+      }
+
+      if (char === '\\') {
+        escaped = true;
+        this.position += 2;
+        continue;
+      }
+
+      this.position += 1;
+    }
+
+    throw new Error('Unterminated JSON string');
+  }
+
+  private skipString(): void {
     this.expect('"');
 
     while (this.position < this.source.length) {
       const char = this.source[this.position];
       if (char === '"') {
         this.position += 1;
-        return JSON.parse(this.source.slice(start, this.position)) as string;
+        return;
       }
 
       if (char === '\\') {
@@ -423,7 +452,7 @@ class JsonPathScanner {
   }
 
   private skipWhitespace(): void {
-    while (this.position < this.source.length && /\s/.test(this.source[this.position])) {
+    while (this.position < this.source.length && isJsonWhitespace(this.source[this.position])) {
       this.position += 1;
     }
   }
@@ -440,7 +469,11 @@ class JsonPathScanner {
 
   private previousCommaBefore(position: number): number | null {
     let index = position - 1;
-    while (index >= 0 && /\s/.test(this.source[index])) index -= 1;
+    while (index >= 0 && isJsonWhitespace(this.source[index])) index -= 1;
     return this.source[index] === ',' ? index : null;
   }
+}
+
+function isJsonWhitespace(char: string): boolean {
+  return char === ' ' || char === '\n' || char === '\r' || char === '\t';
 }

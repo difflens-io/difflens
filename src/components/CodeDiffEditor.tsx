@@ -15,7 +15,7 @@ import {
 } from '@codemirror/view';
 import {
   ignoredPathSpansForEditor,
-  maskIgnoredPathRanges,
+  maskIgnoredSpans,
   type IgnoredSpan
 } from '../core/editorIgnore';
 import type { EditorTarget } from '../core/editorTargets';
@@ -33,6 +33,7 @@ interface CodeDiffEditorProps {
   otherFormat: FormatKind;
   options: DiffOptions;
   selectedTarget?: EditorTarget;
+  diffModel?: EditorDiffModel;
   onChange: (value: string) => void;
   onScroll?: (side: EditorSide, metrics: EditorScrollMetrics) => void;
 }
@@ -93,6 +94,34 @@ export interface CodeDiffEditorHandle {
   scrollToTarget: (target?: EditorTarget) => void;
 }
 
+export interface EditorDiffSideModel {
+  ignoredSpans: IgnoredSpan[];
+  rawLines: string[];
+  maskedLines: string[];
+}
+
+export interface EditorDiffModel {
+  rows: TextDiffRow[];
+  left: EditorDiffSideModel;
+  right: EditorDiffSideModel;
+}
+
+export function buildEmptyEditorDiffModel(left: string, right: string): EditorDiffModel {
+  return {
+    rows: [],
+    left: {
+      ignoredSpans: [],
+      rawLines: splitRawLines(left),
+      maskedLines: splitRawLines(left)
+    },
+    right: {
+      ignoredSpans: [],
+      rawLines: splitRawLines(right),
+      maskedLines: splitRawLines(right)
+    }
+  };
+}
+
 export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorProps>(function CodeDiffEditor({
   value,
   otherValue,
@@ -101,6 +130,7 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
   otherFormat,
   options,
   selectedTarget,
+  diffModel,
   onChange,
   onScroll
 }, ref) {
@@ -228,7 +258,8 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
           format,
           otherFormat,
           options,
-          selectedTarget
+          selectedTarget,
+          diffModel
         })
       )
     });
@@ -245,6 +276,7 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
     options.onlyChanges,
     options.enableEditorFolding,
     options.ignoredPaths,
+    diffModel,
     selectedTarget
   ]);
 
@@ -524,7 +556,8 @@ function buildDiffDecorations({
   format,
   otherFormat,
   options,
-  selectedTarget
+  selectedTarget,
+  diffModel
 }: {
   state: EditorState;
   value: string;
@@ -534,21 +567,19 @@ function buildDiffDecorations({
   otherFormat: FormatKind;
   options: DiffOptions;
   selectedTarget?: EditorTarget;
+  diffModel?: EditorDiffModel;
 }): DecorationSet {
   const leftValue = side === 'left' ? value : otherValue;
   const rightValue = side === 'left' ? otherValue : value;
   const leftFormat = side === 'left' ? format : otherFormat;
   const rightFormat = side === 'left' ? otherFormat : format;
-  const leftLines = splitRawLines(leftValue);
-  const rightLines = splitRawLines(rightValue);
-  const leftIgnoredSpans = ignoredPathSpansForEditor(leftValue, leftFormat, options.ignoredPaths);
-  const rightIgnoredSpans = ignoredPathSpansForEditor(rightValue, rightFormat, options.ignoredPaths);
-  const rows = buildEditorDiffRows(leftValue, rightValue, leftFormat, rightFormat, options);
+  const model =
+    diffModel ?? buildEditorDiffModel(leftValue, rightValue, leftFormat, rightFormat, options);
+  const rows = model.rows;
   const decorations = [];
-  const displayIgnoredSpans = side === 'left' ? leftIgnoredSpans : rightIgnoredSpans;
-  const maskedDisplayLines = splitRawLines(
-    maskIgnoredPathRanges(value, format, options.ignoredPaths)
-  );
+  const displayModel = side === 'left' ? model.left : model.right;
+  const displayIgnoredSpans = displayModel.ignoredSpans;
+  const maskedDisplayLines = displayModel.maskedLines;
 
   const foldedRanges = options.onlyChanges && options.enableEditorFolding
     ? foldedEqualRanges(rows, side)
@@ -590,8 +621,8 @@ function buildDiffDecorations({
         row.leftLine &&
         row.rightLine
       ) {
-        const leftText = leftLines[row.leftLine - 1] ?? '';
-        const rightText = rightLines[row.rightLine - 1] ?? '';
+        const leftText = model.left.rawLines[row.leftLine - 1] ?? '';
+        const rightText = model.right.rawLines[row.rightLine - 1] ?? '';
         const inline = buildInlineDiff(leftText, rightText);
         const parts = side === 'left' ? inline.left : inline.right;
         let offset = 0;
@@ -638,21 +669,23 @@ function buildDiffDecorations({
   return Decoration.set(decorations, true);
 }
 
-export function buildEditorDiffRows(
+export function buildEditorDiffModel(
   left: string,
   right: string,
   leftFormat: FormatKind,
   rightFormat: FormatKind,
   options: DiffOptions
-): TextDiffRow[] {
+): EditorDiffModel {
   const leftIgnoredSpans = ignoredPathSpansForEditor(left, leftFormat, options.ignoredPaths);
   const rightIgnoredSpans = ignoredPathSpansForEditor(right, rightFormat, options.ignoredPaths);
-  const maskedLeft = maskIgnoredPathRanges(left, leftFormat, options.ignoredPaths);
-  const maskedRight = maskIgnoredPathRanges(right, rightFormat, options.ignoredPaths);
+  const maskedLeft = maskIgnoredSpans(left, leftIgnoredSpans);
+  const maskedRight = maskIgnoredSpans(right, rightIgnoredSpans);
   const compareLeft = normalizeForEditorCompare(maskedLeft, options);
   const compareRight = normalizeForEditorCompare(maskedRight, options);
   const changes = diffLines(compareLeft, compareRight);
   const rows: TextDiffRow[] = [];
+  const leftRawLines = splitRawLines(left);
+  const rightRawLines = splitRawLines(right);
   const maskedLeftLines = splitRawLines(maskedLeft);
   const maskedRightLines = splitRawLines(maskedRight);
   const leftIgnoredLines = ignoredLineNumbers(left, leftIgnoredSpans);
@@ -710,7 +743,29 @@ export function buildEditorDiffRows(
     }
   }
 
-  return rows;
+  return {
+    rows,
+    left: {
+      ignoredSpans: leftIgnoredSpans,
+      rawLines: leftRawLines,
+      maskedLines: maskedLeftLines
+    },
+    right: {
+      ignoredSpans: rightIgnoredSpans,
+      rawLines: rightRawLines,
+      maskedLines: maskedRightLines
+    }
+  };
+}
+
+export function buildEditorDiffRows(
+  left: string,
+  right: string,
+  leftFormat: FormatKind,
+  rightFormat: FormatKind,
+  options: DiffOptions
+): TextDiffRow[] {
+  return buildEditorDiffModel(left, right, leftFormat, rightFormat, options).rows;
 }
 
 function normalizeIgnoredOnlyRow(
