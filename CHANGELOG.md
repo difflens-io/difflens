@@ -28,6 +28,7 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 - Added selected-diff highlighting in the input editors and auto-unfolding of folded editor ranges before jumping to a target.
 - Fixed the diff navigator list height so long diff lists scroll inside the sidebar instead of leaving unusable blank space.
 - Kept the diff sidebar collapse and expand control at the same top position and moved the floating diff navigation away from the sidebar toggle.
+- Repositioned the floating diff navigation near the right side of the diff sidebar so it does not cover editor content.
 
 ## 2026-07-24
 

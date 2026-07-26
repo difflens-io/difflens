@@ -290,7 +290,7 @@ button {
 .floating-diff-nav {
   position: fixed;
   top: 50%;
-  right: var(--floating-nav-right, 18px);
+  right: max(14px, calc((100vw - 1680px) / 2 + 14px));
   z-index: 30;
   display: flex;
   width: 42px;
@@ -1103,10 +1103,6 @@ button {
 
   .workspace {
     grid-template-columns: 1fr;
-  }
-
-  .floating-diff-nav {
-    right: 18px;
   }
 
   .navigator {

@@ -127,9 +127,6 @@ export default function App() {
   const workspaceStyle = {
     '--navigator-width': navigatorOpen ? '300px' : '44px'
   } as CSSProperties;
-  const floatingNavStyle = {
-    '--floating-nav-right': navigatorOpen ? '330px' : '74px'
-  } as CSSProperties;
   const editorsStyle = {
     '--left-editor-size': `${editorSplit}fr`,
     '--right-editor-size': `${100 - editorSplit}fr`
@@ -428,7 +425,7 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="floating-diff-nav" style={floatingNavStyle} aria-label="diff navigation">
+      <nav className="floating-diff-nav" aria-label="diff navigation">
         <button
           type="button"
           className="square-button"
