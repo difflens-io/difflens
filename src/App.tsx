@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   CSSProperties,
-  MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
   ReactNode,
   RefObject
@@ -216,15 +215,8 @@ export default function App() {
     });
   }
 
-  function openGitHubRepository(
-    event: ReactMouseEvent<HTMLAnchorElement>,
-    target: 'repository' | 'star_repository'
-  ) {
-    event.preventDefault();
-    event.stopPropagation();
+  function trackGitHubRepositoryClick(target: 'repository' | 'star_repository') {
     trackEvent('open_source_link_clicked', { target });
-
-    window.open(GITHUB_REPOSITORY_URL, '_blank', 'noopener,noreferrer');
   }
 
   function selectRelative(offset: number) {
@@ -642,8 +634,8 @@ export default function App() {
                 className="open-source-link"
                 href={GITHUB_REPOSITORY_URL}
                 target="_blank"
-                rel="noreferrer"
-                onClick={(event) => openGitHubRepository(event, 'repository')}
+                rel="noopener noreferrer"
+                onClick={() => trackGitHubRepositoryClick('repository')}
               >
                 <ExternalLink size={16} />
                 查看源码
@@ -652,8 +644,8 @@ export default function App() {
                 className="open-source-link star"
                 href={GITHUB_REPOSITORY_URL}
                 target="_blank"
-                rel="noreferrer"
-                onClick={(event) => openGitHubRepository(event, 'star_repository')}
+                rel="noopener noreferrer"
+                onClick={() => trackGitHubRepositoryClick('star_repository')}
               >
                 <Star size={16} />
                 Star DiffLens
