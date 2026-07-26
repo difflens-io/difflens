@@ -87,6 +87,7 @@ export interface EditorScrollMetrics {
 
 export interface CodeDiffEditorHandle {
   scrollToRatio: (topRatio: number, leftRatio: number) => void;
+  scrollToLine: (lineNumber?: number) => void;
 }
 
 export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorProps>(function CodeDiffEditor({
@@ -117,6 +118,16 @@ export const CodeDiffEditor = forwardRef<CodeDiffEditorHandle, CodeDiffEditorPro
       const maxLeft = Math.max(0, scroller.scrollWidth - scroller.clientWidth);
       scroller.scrollTop = maxTop * topRatio;
       scroller.scrollLeft = maxLeft * leftRatio;
+    },
+    scrollToLine(lineNumber?: number) {
+      const view = viewRef.current;
+      if (!view || !lineNumber || lineNumber < 1 || lineNumber > view.state.doc.lines) return;
+
+      const line = view.state.doc.line(lineNumber);
+      view.dispatch({
+        selection: { anchor: line.from },
+        effects: EditorView.scrollIntoView(line.from, { y: 'center' })
+      });
     }
   }), []);
 

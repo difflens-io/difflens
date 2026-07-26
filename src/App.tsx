@@ -4,7 +4,10 @@ import {
   ArrowDown,
   ArrowLeftRight,
   ArrowUp,
+  BarChart3,
   Braces,
+  ChevronDown,
+  ChevronUp,
   Clipboard,
   Cookie as CookieIcon,
   Copy,
@@ -18,6 +21,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   ShieldCheck,
+  SlidersHorizontal,
   Star,
   Table2,
   Terminal,
@@ -25,6 +29,7 @@ import {
   Wand2
 } from 'lucide-react';
 import {
+  buildEditorDiffRows,
   CodeDiffEditor,
   type CodeDiffEditorHandle,
   type EditorScrollMetrics
@@ -93,6 +98,7 @@ type VisibleControls = Record<
 >;
 
 const ARRAY_KEY_FORMATS = new Set<CompareResult['kind']>(['json', 'jsonl', 'yaml', 'toml', 'http']);
+type UtilityPanel = 'controls' | 'stats' | 'source' | null;
 
 export default function App() {
   const [left, setLeft] = useState(JSON_LEFT);
@@ -104,6 +110,7 @@ export default function App() {
   const [navigatorOpen, setNavigatorOpen] = useState(true);
   const [editorSplit, setEditorSplit] = useState(50);
   const [syncScroll, setSyncScroll] = useState(false);
+  const [utilityPanel, setUtilityPanel] = useState<UtilityPanel>(null);
   const leftInputRef = useRef<HTMLInputElement | null>(null);
   const rightInputRef = useRef<HTMLInputElement | null>(null);
   const leftEditorRef = useRef<CodeDiffEditorHandle | null>(null);
@@ -125,6 +132,17 @@ export default function App() {
   } as CSSProperties;
 
   const selectedIndex = result.items.findIndex((item) => item.id === selectedId);
+  const editorDiffRows = useMemo(
+    () =>
+      buildEditorDiffRows(
+        left,
+        right,
+        result.leftDetection.kind,
+        result.rightDetection.kind,
+        options
+      ).filter((row) => row.type !== 'equal'),
+    [left, right, result.leftDetection.kind, result.rightDetection.kind, options]
+  );
 
   function updateOption<K extends keyof DiffOptions>(key: K, value: DiffOptions[K]) {
     setOptions((current) => ({ ...current, [key]: value }));
@@ -179,9 +197,36 @@ export default function App() {
 
   function selectRelative(offset: number) {
     if (result.items.length === 0) return;
-    const current = selectedIndex >= 0 ? selectedIndex : 0;
+    const current = selectedIndex >= 0 ? selectedIndex : offset > 0 ? -1 : 0;
     const next = (current + offset + result.items.length) % result.items.length;
-    setSelectedId(result.items[next].id);
+    selectDiffItem(result.items[next].id);
+  }
+
+  function selectDiffItem(id: string) {
+    setSelectedId(id);
+
+    const index = result.items.findIndex((item) => item.id === id);
+    if (index >= 0) scrollEditorsToDiffIndex(index);
+  }
+
+  function scrollEditorsToDiffIndex(index: number) {
+    if (editorDiffRows.length === 0) return;
+
+    const row = editorDiffRows[Math.min(index, editorDiffRows.length - 1)];
+    syncingScrollRef.current = true;
+    leftEditorRef.current?.scrollToLine(row.leftLine);
+    rightEditorRef.current?.scrollToLine(row.rightLine);
+    window.setTimeout(() => {
+      syncingScrollRef.current = false;
+    }, 120);
+  }
+
+  function toggleUtilityPanel(panel: Exclude<UtilityPanel, null>) {
+    setUtilityPanel((current) => {
+      const next = current === panel ? null : panel;
+      trackEvent('utility_panel_toggled', { panel, open: next === panel });
+      return next;
+    });
   }
 
   const handleEditorScroll = useCallback((side: 'left' | 'right', metrics: EditorScrollMetrics) => {
@@ -351,158 +396,199 @@ export default function App() {
         </div>
       </header>
 
-      <section className="control-band" aria-label="controls">
-        {visibleControls.ignoreWhitespace ? (
-          <Toggle
-            checked={options.ignoreWhitespace}
-            label="忽略空白"
-            onChange={(checked) => updateOption('ignoreWhitespace', checked)}
-          />
-        ) : null}
-        {visibleControls.ignoreCase ? (
-          <Toggle
-            checked={options.ignoreCase}
-            label="忽略大小写"
-            onChange={(checked) => updateOption('ignoreCase', checked)}
-          />
-        ) : null}
-        {visibleControls.ignoreKeyOrder ? (
-          <Toggle
-            checked={options.ignoreKeyOrder}
-            label="忽略字段顺序"
-            onChange={(checked) => updateOption('ignoreKeyOrder', checked)}
-          />
-        ) : null}
-        {visibleControls.highlightInlineChanges ? (
-          <Toggle
-            checked={options.highlightInlineChanges}
-            label="值内高亮"
-            onChange={(checked) => updateOption('highlightInlineChanges', checked)}
-          />
-        ) : null}
-        {visibleControls.abbreviateLongValues ? (
-          <Toggle
-            checked={options.abbreviateLongValues}
-            label="省略长值"
-            onChange={(checked) => updateOption('abbreviateLongValues', checked)}
-          />
-        ) : null}
-        {visibleControls.showDiffInEditors ? (
-          <Toggle
-            checked={options.showDiffInEditors}
-            label="输入区显示差异"
-            onChange={(checked) => updateOption('showDiffInEditors', checked)}
-          />
-        ) : null}
-        {visibleControls.showEditorLineNumbers ? (
-          <Toggle
-            checked={options.showEditorLineNumbers}
-            label="显示行号"
-            onChange={(checked) => updateOption('showEditorLineNumbers', checked)}
-          />
-        ) : null}
-        {visibleControls.enableEditorFolding ? (
-          <Toggle
-            checked={options.enableEditorFolding}
-            label="内容折叠"
-            onChange={(checked) => updateOption('enableEditorFolding', checked)}
-          />
-        ) : null}
-        {visibleControls.onlyChanges ? (
-          <Toggle
-            checked={options.onlyChanges}
-            label="只看差异"
-            onChange={(checked) => updateOption('onlyChanges', checked)}
-          />
-        ) : null}
-
-        {visibleControls.arrayKey ? (
-          <label className="text-field compact">
-            <span>数组主键</span>
-            <input
-              value={options.arrayKey}
-              onChange={(event) => updateOption('arrayKey', event.target.value)}
-              placeholder="id"
+      <section className={`utility-band ${utilityPanel ? 'expanded' : ''}`} aria-label="overview and controls">
+        <div className="utility-summary">
+          <div className="summary-metrics" aria-label="summary">
+            <span className="summary-pill">
+              <span>格式</span>
+              <strong>{result.label}</strong>
+            </span>
+            <span className="summary-pill">
+              <span>差异</span>
+              <strong>{result.stats.total}</strong>
+            </span>
+            {message ? <span className="summary-message">{message}</span> : null}
+          </div>
+          <div className="utility-actions">
+            <UtilityToggle
+              active={utilityPanel === 'controls'}
+              icon={<SlidersHorizontal size={16} />}
+              label="选项"
+              onClick={() => toggleUtilityPanel('controls')}
             />
-          </label>
-        ) : null}
-        {visibleControls.csvKey ? (
-          <label className="text-field compact">
-            <span>表格主键</span>
-            <input
-              value={options.csvKey}
-              onChange={(event) => updateOption('csvKey', event.target.value)}
-              placeholder="id"
+            <UtilityToggle
+              active={utilityPanel === 'stats'}
+              icon={<BarChart3 size={16} />}
+              label="统计"
+              onClick={() => toggleUtilityPanel('stats')}
             />
-          </label>
-        ) : null}
-        {visibleControls.ignoredPaths ? (
-          <label className="text-field wide">
-            <span>忽略路径</span>
-            <input
-              value={options.ignoredPaths.join(', ')}
-              onChange={(event) =>
-                updateOption(
-                  'ignoredPaths',
-                  event.target.value
-                    .split(',')
-                    .map((item) => item.trim())
-                    .filter(Boolean)
-                )
-              }
-              placeholder="timestamp, $.meta.*"
+            <UtilityToggle
+              active={utilityPanel === 'source'}
+              icon={<Github size={16} />}
+              label="开源"
+              onClick={() => toggleUtilityPanel('source')}
             />
-          </label>
-        ) : null}
-      </section>
-
-      <section className="stats-band" aria-label="stats">
-        <Metric label="格式" value={result.label} icon={iconForMode(result.mode)} />
-        <Metric label="差异" value={String(result.stats.total)} />
-        <Metric label="新增" value={String(result.stats.added)} tone="added" />
-        <Metric label="删除" value={String(result.stats.removed)} tone="removed" />
-        <Metric label="修改" value={String(result.stats.modified)} tone="modified" />
-        {message ? <div className="message">{message}</div> : null}
-      </section>
-
-      <section className="open-source-band" aria-label="open source">
-        <div className="open-source-title">
-          <Github size={22} />
-          <div>
-            <strong>Open source on GitHub</strong>
-            <span>源码公开、MIT 许可，欢迎审查、关注和 Star</span>
           </div>
         </div>
-        <div className="open-source-points" aria-label="open source details">
-          <span>
-            <ShieldCheck size={15} />
-            本地对比
-          </span>
-          <span>MIT License</span>
-          <span>React + TypeScript</span>
-        </div>
-        <div className="open-source-actions">
-          <a
-            className="open-source-link"
-            href="https://github.com/difflens-io/difflens"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackEvent('open_source_link_clicked', { target: 'repository' })}
-          >
-            <ExternalLink size={16} />
-            查看源码
-          </a>
-          <a
-            className="open-source-link star"
-            href="https://github.com/difflens-io/difflens"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackEvent('open_source_link_clicked', { target: 'star_repository' })}
-          >
-            <Star size={16} />
-            Star DiffLens
-          </a>
-        </div>
+
+        {utilityPanel === 'controls' ? (
+          <section className="control-band utility-drawer" aria-label="controls">
+            {visibleControls.ignoreWhitespace ? (
+              <Toggle
+                checked={options.ignoreWhitespace}
+                label="忽略空白"
+                onChange={(checked) => updateOption('ignoreWhitespace', checked)}
+              />
+            ) : null}
+            {visibleControls.ignoreCase ? (
+              <Toggle
+                checked={options.ignoreCase}
+                label="忽略大小写"
+                onChange={(checked) => updateOption('ignoreCase', checked)}
+              />
+            ) : null}
+            {visibleControls.ignoreKeyOrder ? (
+              <Toggle
+                checked={options.ignoreKeyOrder}
+                label="忽略字段顺序"
+                onChange={(checked) => updateOption('ignoreKeyOrder', checked)}
+              />
+            ) : null}
+            {visibleControls.highlightInlineChanges ? (
+              <Toggle
+                checked={options.highlightInlineChanges}
+                label="值内高亮"
+                onChange={(checked) => updateOption('highlightInlineChanges', checked)}
+              />
+            ) : null}
+            {visibleControls.abbreviateLongValues ? (
+              <Toggle
+                checked={options.abbreviateLongValues}
+                label="省略长值"
+                onChange={(checked) => updateOption('abbreviateLongValues', checked)}
+              />
+            ) : null}
+            {visibleControls.showDiffInEditors ? (
+              <Toggle
+                checked={options.showDiffInEditors}
+                label="输入区显示差异"
+                onChange={(checked) => updateOption('showDiffInEditors', checked)}
+              />
+            ) : null}
+            {visibleControls.showEditorLineNumbers ? (
+              <Toggle
+                checked={options.showEditorLineNumbers}
+                label="显示行号"
+                onChange={(checked) => updateOption('showEditorLineNumbers', checked)}
+              />
+            ) : null}
+            {visibleControls.enableEditorFolding ? (
+              <Toggle
+                checked={options.enableEditorFolding}
+                label="内容折叠"
+                onChange={(checked) => updateOption('enableEditorFolding', checked)}
+              />
+            ) : null}
+            {visibleControls.onlyChanges ? (
+              <Toggle
+                checked={options.onlyChanges}
+                label="只看差异"
+                onChange={(checked) => updateOption('onlyChanges', checked)}
+              />
+            ) : null}
+
+            {visibleControls.arrayKey ? (
+              <label className="text-field compact">
+                <span>数组主键</span>
+                <input
+                  value={options.arrayKey}
+                  onChange={(event) => updateOption('arrayKey', event.target.value)}
+                  placeholder="id"
+                />
+              </label>
+            ) : null}
+            {visibleControls.csvKey ? (
+              <label className="text-field compact">
+                <span>表格主键</span>
+                <input
+                  value={options.csvKey}
+                  onChange={(event) => updateOption('csvKey', event.target.value)}
+                  placeholder="id"
+                />
+              </label>
+            ) : null}
+            {visibleControls.ignoredPaths ? (
+              <label className="text-field wide">
+                <span>忽略路径</span>
+                <input
+                  value={options.ignoredPaths.join(', ')}
+                  onChange={(event) =>
+                    updateOption(
+                      'ignoredPaths',
+                      event.target.value
+                        .split(',')
+                        .map((item) => item.trim())
+                        .filter(Boolean)
+                    )
+                  }
+                  placeholder="timestamp, $.meta.*"
+                />
+              </label>
+            ) : null}
+          </section>
+        ) : null}
+
+        {utilityPanel === 'stats' ? (
+          <section className="stats-band utility-drawer" aria-label="stats">
+            <Metric label="格式" value={result.label} icon={iconForMode(result.mode)} />
+            <Metric label="差异" value={String(result.stats.total)} />
+            <Metric label="新增" value={String(result.stats.added)} tone="added" />
+            <Metric label="删除" value={String(result.stats.removed)} tone="removed" />
+            <Metric label="修改" value={String(result.stats.modified)} tone="modified" />
+          </section>
+        ) : null}
+
+        {utilityPanel === 'source' ? (
+          <section className="open-source-band utility-drawer" aria-label="open source">
+            <div className="open-source-title">
+              <Github size={22} />
+              <div>
+                <strong>Open source on GitHub</strong>
+                <span>源码公开、MIT 许可，欢迎审查、关注和 Star</span>
+              </div>
+            </div>
+            <div className="open-source-points" aria-label="open source details">
+              <span>
+                <ShieldCheck size={15} />
+                本地对比
+              </span>
+              <span>MIT License</span>
+              <span>React + TypeScript</span>
+            </div>
+            <div className="open-source-actions">
+              <a
+                className="open-source-link"
+                href="https://github.com/difflens-io/difflens"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => trackEvent('open_source_link_clicked', { target: 'repository' })}
+              >
+                <ExternalLink size={16} />
+                查看源码
+              </a>
+              <a
+                className="open-source-link star"
+                href="https://github.com/difflens-io/difflens"
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => trackEvent('open_source_link_clicked', { target: 'star_repository' })}
+              >
+                <Star size={16} />
+                Star DiffLens
+              </a>
+            </div>
+          </section>
+        ) : null}
       </section>
 
       <section
@@ -622,7 +708,7 @@ export default function App() {
             <DiffNavigator
               items={result.items}
               selectedId={selectedId}
-              onSelect={setSelectedId}
+              onSelect={selectDiffItem}
             />
           ) : null}
         </aside>
@@ -692,7 +778,7 @@ export default function App() {
             selectedId={selectedId}
             highlightInlineChanges={options.highlightInlineChanges}
             abbreviateLongValues={options.abbreviateLongValues}
-            onSelect={setSelectedId}
+            onSelect={selectDiffItem}
           />
         )}
       </section>
@@ -724,6 +810,31 @@ function controlsForResult(result: CompareResult, options: DiffOptions): Visible
     csvKey: table,
     ignoredPaths: structured || table
   };
+}
+
+function UtilityToggle({
+  active,
+  icon,
+  label,
+  onClick
+}: {
+  active: boolean;
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`utility-toggle ${active ? 'active' : ''}`}
+      aria-expanded={active}
+      onClick={onClick}
+    >
+      {icon}
+      <span>{label}</span>
+      {active ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+    </button>
+  );
 }
 
 function Toggle({

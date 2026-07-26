@@ -28,7 +28,8 @@ export type AnalyticsEventName =
   | 'open_source_link_clicked'
   | 'option_changed'
   | 'sample_loaded'
-  | 'sync_scroll_changed';
+  | 'sync_scroll_changed'
+  | 'utility_panel_toggled';
 
 export type AnalyticsParams = Record<string, string | number | boolean | undefined>;
 

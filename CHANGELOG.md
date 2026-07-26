@@ -17,6 +17,12 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 
 - Expanded the test suite to 30 passing tests covering formatted JSONL parsing, ignored paths, and folding.
 
+### Workspace Focus
+
+- Replaced the always-visible controls, stats, and open-source bands with a compact summary bar and one-at-a-time drawers.
+- Kept format and total diff count visible while moving detailed controls, stats, and GitHub trust content behind focused toggles.
+- Updated previous / next diff navigation and diff item selection to scroll the input editors to the corresponding changed lines.
+
 ## 2026-07-24
 
 ### Project Definition
