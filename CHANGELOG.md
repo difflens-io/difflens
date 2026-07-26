@@ -4,6 +4,19 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 
 [中文版](CHANGELOG.zh-CN.md)
 
+## 2026-07-26
+
+### JSONL Formatting
+
+- Changed JSONL formatting to pretty-print each record as a JSON block when using "Format inputs".
+- Added JSONL parsing support for formatted consecutive JSON values, so structured diffing still works after formatting.
+- Added editor folding for formatted JSONL records and nested JSON objects.
+- Kept ignored path masking active for formatted JSONL in in-editor diff display.
+
+### Verification
+
+- Expanded the test suite to 30 passing tests covering formatted JSONL parsing, ignored paths, and folding.
+
 ## 2026-07-24
 
 ### Project Definition

@@ -2,7 +2,7 @@ import { foldable } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_OPTIONS } from '../core/diff';
-import { buildEditorDiffRows, httpRequestFolding } from './CodeDiffEditor';
+import { buildEditorDiffRows, httpRequestFolding, jsonlFolding } from './CodeDiffEditor';
 
 const HTTP_REQUEST = `### Create user
 POST https://api.example.com/users HTTP/1.1
@@ -46,6 +46,40 @@ describe('httpRequestFolding', () => {
     expect(foldable(state, nestedObject.from, nestedObject.to)).toEqual({
       from: nestedObject.to,
       to: state.doc.line(9).from + state.doc.line(9).text.indexOf('}')
+    });
+  });
+});
+
+describe('jsonlFolding', () => {
+  it('folds formatted JSONL records and nested objects', () => {
+    const jsonl = `{
+  "id": "a",
+  "meta": {
+    "count": 1
+  }
+}
+{
+  "id": "b"
+}`;
+    const state = EditorState.create({
+      doc: jsonl,
+      extensions: [jsonlFolding()]
+    });
+    const firstRecord = state.doc.line(1);
+    const nestedObject = state.doc.line(3);
+    const secondRecord = state.doc.line(7);
+
+    expect(foldable(state, firstRecord.from, firstRecord.to)).toEqual({
+      from: firstRecord.from + 1,
+      to: state.doc.line(6).from
+    });
+    expect(foldable(state, nestedObject.from, nestedObject.to)).toEqual({
+      from: nestedObject.from + nestedObject.text.indexOf('{') + 1,
+      to: state.doc.line(5).from + state.doc.line(5).text.indexOf('}')
+    });
+    expect(foldable(state, secondRecord.from, secondRecord.to)).toEqual({
+      from: secondRecord.from + 1,
+      to: state.doc.line(9).from
     });
   });
 });

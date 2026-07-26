@@ -2,6 +2,7 @@ import Papa from 'papaparse';
 import { XMLParser } from 'fast-xml-parser';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
+import { parseJsonlRecords } from './jsonl';
 import type { DetectionResult, FormatKind, FormatMode, ParsedTable } from './types';
 
 const LABELS: Record<FormatKind, string> = {
@@ -164,24 +165,15 @@ function tryJson(raw: string, forced = false): DetectionResult | never | null {
 }
 
 function tryJsonl(raw: string, forced = false): DetectionResult | never | null {
-  const lines = raw.replace(/\r\n/g, '\n').split('\n');
-  const records: unknown[] = [];
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const text = lines[index].trim();
-    if (!text) continue;
-
-    if (!forced && !/^[{[]/.test(text)) return null;
-
-    try {
-      records.push(JSON.parse(text));
-    } catch (error) {
-      if (forced) {
-        throw new Error(`第 ${index + 1} 行不是有效 JSONL: ${error instanceof Error ? error.message : String(error)}`);
-      }
-      return null;
-    }
+  let parsedRecords: ReturnType<typeof parseJsonlRecords>;
+  try {
+    parsedRecords = parseJsonlRecords(raw);
+  } catch (error) {
+    if (forced) throw error;
+    return null;
   }
+
+  const records = parsedRecords.map((record) => record.value);
 
   if (records.length === 0) {
     if (forced) throw new Error('JSONL 内容为空');
@@ -196,7 +188,7 @@ function tryJsonl(raw: string, forced = false): DetectionResult | never | null {
     label: LABELS.jsonl,
     confidence: forced ? 1 : 0.94,
     parsed: records,
-    formatted: records.map((record) => JSON.stringify(record)).join('\n')
+    formatted: records.map((record) => JSON.stringify(record, null, 2)).join('\n')
   };
 }
 

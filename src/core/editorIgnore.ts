@@ -1,4 +1,5 @@
 import { isIgnoredPath } from './normalize';
+import { parseJsonlRecords } from './jsonl';
 import type { FormatKind } from './types';
 
 export type IgnoredSpan = {
@@ -94,22 +95,20 @@ function collectJsonIgnoredSpans(
 
 function collectJsonlIgnoredSpans(value: string, patterns: string[]): IgnoredSpan[] {
   const spans: IgnoredSpan[] = [];
-  let recordIndex = 0;
 
-  for (const line of splitSourceLines(value)) {
-    const leadingWhitespace = line.text.match(/^\s*/)?.[0].length ?? 0;
-    const trimmed = line.text.trim();
-    if (!trimmed) continue;
-
-    spans.push(
-      ...collectJsonIgnoredSpans(
-        trimmed,
-        `$[${recordIndex}]`,
-        line.from + leadingWhitespace,
-        patterns
-      )
-    );
-    recordIndex += 1;
+  try {
+    parseJsonlRecords(value).forEach((record, recordIndex) => {
+      spans.push(
+        ...collectJsonIgnoredSpans(
+          value.slice(record.from, record.to),
+          `$[${recordIndex}]`,
+          record.from,
+          patterns
+        )
+      );
+    });
+  } catch {
+    return [];
   }
 
   return spans;

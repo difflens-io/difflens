@@ -58,4 +58,44 @@ Content-Type: application/json
       maskIgnoredPathRanges(changed, 'jsonl', ['$.updatedAt'])
     );
   });
+
+  it('masks ignored fields in formatted JSONL blocks', () => {
+    const left = `{
+  "id": "a",
+  "name": "Ada",
+  "updatedAt": "old"
+}
+{
+  "id": "b",
+  "name": "Grace",
+  "updatedAt": "old"
+}`;
+    const right = `{
+  "id": "a",
+  "name": "Ada",
+  "updatedAt": "new"
+}
+{
+  "id": "b",
+  "name": "Grace",
+  "updatedAt": "new"
+}`;
+    const changed = `{
+  "id": "a",
+  "name": "Ada",
+  "updatedAt": "new"
+}
+{
+  "id": "b",
+  "name": "Linus",
+  "updatedAt": "new"
+}`;
+
+    expect(maskIgnoredPathRanges(left, 'jsonl', ['$.updatedAt'])).toBe(
+      maskIgnoredPathRanges(right, 'jsonl', ['$.updatedAt'])
+    );
+    expect(maskIgnoredPathRanges(left, 'jsonl', ['$.updatedAt'])).not.toBe(
+      maskIgnoredPathRanges(changed, 'jsonl', ['$.updatedAt'])
+    );
+  });
 });

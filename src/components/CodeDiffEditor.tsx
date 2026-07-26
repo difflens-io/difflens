@@ -285,10 +285,18 @@ function buildEditorExtensions(
   if (format === 'markdown' && markdownExtension) extensions.push(markdownExtension);
   if (options.enableEditorFolding) {
     if (format === 'http') extensions.push(httpRequestFolding());
+    if (format === 'jsonl') extensions.push(jsonlFolding());
     extensions.push(foldGutter());
   }
 
   return extensions;
+}
+
+export function jsonlFolding(): Extension {
+  return foldService.of((state, lineStart) => {
+    const line = state.doc.lineAt(lineStart);
+    return foldJsonBodyValue(state, line);
+  });
 }
 
 export function httpRequestFolding(): Extension {

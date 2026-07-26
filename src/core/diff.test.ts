@@ -61,7 +61,42 @@ describe('compareInputs', () => {
     const result = detectFormat('{"id":"only","value":1}', 'jsonl');
 
     expect(result.kind).toBe('jsonl');
-    expect(result.formatted).toBe('{"id":"only","value":1}');
+    expect(result.formatted).toBe(`{
+  "id": "only",
+  "value": 1
+}`);
+  });
+
+  it('formats JSONL records as foldable JSON blocks and parses them again', () => {
+    const compact = [
+      '{"id":"a","meta":{"count":1}}',
+      '{"id":"b","meta":{"count":2}}'
+    ].join('\n');
+    const formatted = detectFormat(compact, 'jsonl').formatted;
+
+    expect(formatted).toBe(`{
+  "id": "a",
+  "meta": {
+    "count": 1
+  }
+}
+{
+  "id": "b",
+  "meta": {
+    "count": 2
+  }
+}`);
+
+    const result = compareInputs(
+      formatted,
+      formatted.replace('"count": 2', '"count": 3'),
+      'auto',
+      DEFAULT_OPTIONS
+    );
+
+    expect(result.kind).toBe('jsonl');
+    expect(result.mode).toBe('structured');
+    expect(result.items.map((item) => item.path)).toEqual(['$[b].meta.count']);
   });
 
   it('compares CSV cells with a primary key column', () => {
