@@ -99,16 +99,15 @@ function collectJsonIgnoredSpans(
 
 function collectJsonlIgnoredSpans(value: string, patterns: string[]): IgnoredSpan[] {
   const spans: IgnoredSpan[] = [];
+  const propertyPatterns = simpleJsonlPropertyPatterns(patterns);
 
   try {
     parseJsonlRecords(value).forEach((record, recordIndex) => {
+      const recordSource = value.slice(record.from, record.to);
       spans.push(
-        ...collectJsonIgnoredSpans(
-          value.slice(record.from, record.to),
-          `$[${recordIndex}]`,
-          record.from,
-          patterns
-        )
+        ...(propertyPatterns
+          ? collectJsonPropertyIgnoredSpans(recordSource, record.from, propertyPatterns)
+          : collectJsonIgnoredSpans(recordSource, `$[${recordIndex}]`, record.from, patterns))
       );
     });
   } catch {
@@ -116,6 +115,47 @@ function collectJsonlIgnoredSpans(value: string, patterns: string[]): IgnoredSpa
   }
 
   return spans;
+}
+
+type SimpleJsonlPropertyPattern = {
+  key: string;
+  rootOnly: boolean;
+};
+
+function simpleJsonlPropertyPatterns(patterns: string[]): SimpleJsonlPropertyPattern[] | null {
+  const cleanPatterns = patterns.map((pattern) => pattern.trim()).filter(Boolean);
+  const simplePatterns: SimpleJsonlPropertyPattern[] = [];
+
+  for (const pattern of cleanPatterns) {
+    if (pattern.includes('*')) return null;
+
+    if (/^[^$.[\]]+$/.test(pattern)) {
+      simplePatterns.push({ key: pattern, rootOnly: false });
+      continue;
+    }
+
+    const rootProperty = /^\$\.([^.[\]]+)$/.exec(pattern);
+    if (rootProperty) {
+      simplePatterns.push({ key: rootProperty[1], rootOnly: true });
+      continue;
+    }
+
+    return null;
+  }
+
+  return simplePatterns;
+}
+
+function collectJsonPropertyIgnoredSpans(
+  source: string,
+  baseOffset: number,
+  patterns: SimpleJsonlPropertyPattern[]
+): IgnoredSpan[] {
+  try {
+    return new JsonPropertySpanScanner(source, baseOffset, patterns).scan();
+  } catch {
+    return [];
+  }
 }
 
 function collectHttpJsonBodyIgnoredSpans(value: string, patterns: string[]): IgnoredSpan[] {
@@ -273,6 +313,189 @@ function mergeSpans(spans: IgnoredSpan[], length: number): IgnoredSpan[] {
 
 function escapePathSegment(segment: string): string {
   return segment.replace(/\./g, '\\.');
+}
+
+class JsonPropertySpanScanner {
+  private position = 0;
+  private readonly spans: IgnoredSpan[] = [];
+
+  constructor(
+    private readonly source: string,
+    private readonly baseOffset: number,
+    private readonly patterns: SimpleJsonlPropertyPattern[]
+  ) {}
+
+  scan(): IgnoredSpan[] {
+    this.skipWhitespace();
+    this.parseValue(0);
+    this.skipWhitespace();
+
+    if (this.position !== this.source.length) {
+      throw new Error('Unexpected JSON content');
+    }
+
+    return this.spans;
+  }
+
+  private parseValue(depth: number): IgnoredSpan {
+    this.skipWhitespace();
+    const start = this.position;
+    const char = this.source[this.position];
+
+    if (char === '{') return this.parseObject(depth, start);
+    if (char === '[') return this.parseArray(depth, start);
+    if (char === '"') {
+      this.skipString();
+      return { from: start, to: this.position };
+    }
+    if (char === '-' || /\d/.test(char)) return this.parseNumber(start);
+    if (this.source.startsWith('true', this.position)) return this.parseLiteral(start, 'true');
+    if (this.source.startsWith('false', this.position)) return this.parseLiteral(start, 'false');
+    if (this.source.startsWith('null', this.position)) return this.parseLiteral(start, 'null');
+
+    throw new Error('Unexpected JSON value');
+  }
+
+  private parseObject(depth: number, start: number): IgnoredSpan {
+    this.expect('{');
+    this.skipWhitespace();
+
+    if (this.consume('}')) return { from: start, to: this.position };
+
+    while (this.position < this.source.length) {
+      this.skipWhitespace();
+      const propertyStart = this.position;
+      const key = this.parseStringValue();
+
+      this.skipWhitespace();
+      this.expect(':');
+      const value = this.parseValue(depth + 1);
+      this.skipWhitespace();
+
+      const commaPosition = this.consume(',') ? this.position : null;
+      const rangeFrom = commaPosition === null ? this.previousCommaBefore(propertyStart) ?? propertyStart : propertyStart;
+      const rangeTo = commaPosition ?? value.to;
+
+      if (this.shouldIgnoreKey(key, depth)) {
+        this.spans.push({
+          from: this.baseOffset + rangeFrom,
+          to: this.baseOffset + rangeTo
+        });
+      }
+
+      if (commaPosition !== null) continue;
+      this.expect('}');
+      return { from: start, to: this.position };
+    }
+
+    throw new Error('Unterminated JSON object');
+  }
+
+  private parseArray(depth: number, start: number): IgnoredSpan {
+    this.expect('[');
+    this.skipWhitespace();
+
+    if (this.consume(']')) return { from: start, to: this.position };
+
+    while (this.position < this.source.length) {
+      this.skipWhitespace();
+      this.parseValue(depth + 1);
+      this.skipWhitespace();
+
+      if (this.consume(',')) continue;
+      this.expect(']');
+      return { from: start, to: this.position };
+    }
+
+    throw new Error('Unterminated JSON array');
+  }
+
+  private shouldIgnoreKey(key: string, depth: number): boolean {
+    return this.patterns.some((pattern) => pattern.key === key && (!pattern.rootOnly || depth === 0));
+  }
+
+  private parseStringValue(): string {
+    const start = this.position;
+    this.expect('"');
+    const valueStart = this.position;
+    let escaped = false;
+
+    while (this.position < this.source.length) {
+      const char = this.source[this.position];
+      if (char === '"') {
+        const value = this.source.slice(valueStart, this.position);
+        this.position += 1;
+        return escaped ? JSON.parse(this.source.slice(start, this.position)) as string : value;
+      }
+
+      if (char === '\\') {
+        escaped = true;
+        this.position += 2;
+        continue;
+      }
+
+      this.position += 1;
+    }
+
+    throw new Error('Unterminated JSON string');
+  }
+
+  private skipString(): void {
+    this.expect('"');
+
+    while (this.position < this.source.length) {
+      const char = this.source[this.position];
+      if (char === '"') {
+        this.position += 1;
+        return;
+      }
+
+      if (char === '\\') {
+        this.position += 2;
+        continue;
+      }
+
+      this.position += 1;
+    }
+
+    throw new Error('Unterminated JSON string');
+  }
+
+  private parseNumber(start: number): IgnoredSpan {
+    const match = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
+    match.lastIndex = this.position;
+    const number = match.exec(this.source);
+    if (!number) throw new Error('Invalid JSON number');
+    this.position = match.lastIndex;
+    return { from: start, to: this.position };
+  }
+
+  private parseLiteral(start: number, literal: string): IgnoredSpan {
+    this.position += literal.length;
+    return { from: start, to: this.position };
+  }
+
+  private skipWhitespace(): void {
+    while (this.position < this.source.length && isJsonWhitespace(this.source[this.position])) {
+      this.position += 1;
+    }
+  }
+
+  private expect(char: string): void {
+    if (!this.consume(char)) throw new Error(`Expected ${char}`);
+  }
+
+  private consume(char: string): boolean {
+    if (this.source[this.position] !== char) return false;
+    this.position += 1;
+    return true;
+  }
+
+  private previousCommaBefore(position: number): number | null {
+    let index = position - 1;
+    while (index >= 0 && isJsonWhitespace(this.source[index])) index -= 1;
+    return this.source[index] === ',' ? index : null;
+  }
 }
 
 class JsonPathScanner {

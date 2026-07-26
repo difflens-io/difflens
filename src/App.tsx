@@ -107,7 +107,6 @@ type VisibleControls = Record<
 
 const ARRAY_KEY_FORMATS = new Set<CompareResult['kind']>(['json', 'jsonl', 'yaml', 'toml', 'http']);
 const GITHUB_REPOSITORY_URL = 'https://github.com/difflens-io/difflens';
-const LARGE_EDITOR_DIFF_LIMIT = 1024 * 1024;
 type UtilityPanel = 'controls' | 'stats' | 'source' | null;
 
 export default function App() {
@@ -143,27 +142,14 @@ export default function App() {
     '--left-editor-size': `${editorSplit}fr`,
     '--right-editor-size': `${100 - editorSplit}fr`
   } as CSSProperties;
-  const largeEditorDiffSuspended =
-    options.showDiffInEditors && left.length + right.length > LARGE_EDITOR_DIFF_LIMIT;
-  const editorDiffSuspended = options.showDiffInEditors && (largeEditorDiffSuspended || comparePending);
+  const editorDiffSuspended = options.showDiffInEditors && comparePending;
   const editorOptions = useMemo(
-    () =>
-      editorDiffSuspended
-        ? {
-            ...options,
-            showDiffInEditors: false,
-            enableEditorFolding: false,
-            onlyChanges: false,
-            highlightInlineChanges: false
-          }
-        : options,
+    () => effectiveEditorOptions(options, editorDiffSuspended),
     [editorDiffSuspended, options]
   );
   const displayMessage = comparePending
     ? '正在更新对比...'
-    : largeEditorDiffSuspended
-      ? '大文件模式：输入区实时差异已暂停，结果区仍正常对比'
-      : message;
+    : message;
 
   const selectedIndex = result.items.findIndex((item) => item.id === selectedId);
   const editorDiffModel = useMemo(
@@ -885,6 +871,18 @@ export default function App() {
       </section>
     </main>
   );
+}
+
+export function effectiveEditorOptions(options: DiffOptions, suspended: boolean): DiffOptions {
+  if (!suspended) return options;
+
+  return {
+    ...options,
+    showDiffInEditors: false,
+    enableEditorFolding: false,
+    onlyChanges: false,
+    highlightInlineChanges: false
+  };
 }
 
 function controlsForResult(result: CompareResult, options: DiffOptions): VisibleControls {

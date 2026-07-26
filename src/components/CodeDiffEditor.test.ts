@@ -2,7 +2,7 @@ import { foldable } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_OPTIONS } from '../core/diff';
-import { buildEditorDiffRows, httpRequestFolding, jsonlFolding } from './CodeDiffEditor';
+import { buildEditorDiffModel, buildEditorDiffRows, httpRequestFolding, jsonlFolding } from './CodeDiffEditor';
 
 const HTTP_REQUEST = `### Create user
 POST https://api.example.com/users HTTP/1.1
@@ -136,5 +136,27 @@ describe('buildEditorDiffRows', () => {
     );
 
     expect(rows.every((row) => row.type === 'equal')).toBe(true);
+  });
+
+  it('keeps editor diff rows for JSONL content larger than 1MB', () => {
+    const largePayload = 'x'.repeat(620_000);
+    const left = [
+      JSON.stringify({ id: 'a', updatedAt: 'old', payload: largePayload }),
+      JSON.stringify({ id: 'b', value: 'left', payload: largePayload })
+    ].join('\n');
+    const right = [
+      JSON.stringify({ id: 'a', updatedAt: 'new', payload: largePayload }),
+      JSON.stringify({ id: 'b', value: 'right', payload: largePayload })
+    ].join('\n');
+
+    expect(left.length + right.length).toBeGreaterThan(1024 * 1024);
+
+    const model = buildEditorDiffModel(left, right, 'jsonl', 'jsonl', {
+      ...DEFAULT_OPTIONS,
+      ignoredPaths: ['updatedAt']
+    });
+
+    expect(model.rows[0].type).toBe('equal');
+    expect(model.rows[1].type).toBe('modified');
   });
 });
