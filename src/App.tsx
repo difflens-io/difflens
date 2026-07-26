@@ -1,5 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 'react';
+import type {
+  CSSProperties,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+  RefObject
+} from 'react';
 import {
   ArrowDown,
   ArrowLeftRight,
@@ -99,6 +105,7 @@ type VisibleControls = Record<
 >;
 
 const ARRAY_KEY_FORMATS = new Set<CompareResult['kind']>(['json', 'jsonl', 'yaml', 'toml', 'http']);
+const GITHUB_REPOSITORY_URL = 'https://github.com/difflens-io/difflens';
 type UtilityPanel = 'controls' | 'stats' | 'source' | null;
 
 export default function App() {
@@ -207,6 +214,18 @@ export default function App() {
       format: result.label,
       diff_count: result.stats.total
     });
+  }
+
+  function openGitHubRepository(
+    event: ReactMouseEvent<HTMLAnchorElement>,
+    target: 'repository' | 'star_repository'
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    trackEvent('open_source_link_clicked', { target });
+
+    const opened = window.open(GITHUB_REPOSITORY_URL, '_blank', 'noopener,noreferrer');
+    if (!opened) window.location.href = GITHUB_REPOSITORY_URL;
   }
 
   function selectRelative(offset: number) {
@@ -622,20 +641,20 @@ export default function App() {
             <div className="open-source-actions">
               <a
                 className="open-source-link"
-                href="https://github.com/difflens-io/difflens"
+                href={GITHUB_REPOSITORY_URL}
                 target="_blank"
                 rel="noreferrer"
-                onClick={() => trackEvent('open_source_link_clicked', { target: 'repository' })}
+                onClick={(event) => openGitHubRepository(event, 'repository')}
               >
                 <ExternalLink size={16} />
                 查看源码
               </a>
               <a
                 className="open-source-link star"
-                href="https://github.com/difflens-io/difflens"
+                href={GITHUB_REPOSITORY_URL}
                 target="_blank"
                 rel="noreferrer"
-                onClick={() => trackEvent('open_source_link_clicked', { target: 'star_repository' })}
+                onClick={(event) => openGitHubRepository(event, 'star_repository')}
               >
                 <Star size={16} />
                 Star DiffLens
