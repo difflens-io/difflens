@@ -2,7 +2,8 @@ import { foldable } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_OPTIONS } from '../core/diff';
-import { buildEditorDiffModel, buildEditorDiffRows, httpRequestFolding, jsonlFolding } from './CodeDiffEditor';
+import { buildEditorDiffModel, buildEditorDiffRows } from '../core/editorDiffModel';
+import { httpRequestFolding, jsonlFolding } from './CodeDiffEditor';
 
 const HTTP_REQUEST = `### Create user
 POST https://api.example.com/users HTTP/1.1

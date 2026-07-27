@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
@@ -34,15 +34,13 @@ import {
   Wand2
 } from 'lucide-react';
 import {
-  buildEmptyEditorDiffModel,
-  buildEditorDiffModel,
   CodeDiffEditor,
   type CodeDiffEditorHandle,
-  type EditorDiffModel,
   type EditorScrollMetrics
 } from './components/CodeDiffEditor';
 import { trackEvent } from './core/analytics';
-import { compareInputs, DEFAULT_OPTIONS, preview } from './core/diff';
+import { DEFAULT_OPTIONS, preview } from './core/diff';
+import type { EditorDiffModel } from './core/editorDiffModel';
 import { targetForDiffItem, type EditorTarget } from './core/editorTargets';
 import {
   COOKIE_LEFT,
@@ -64,6 +62,7 @@ import {
 } from './core/examples';
 import { buildInlineDiff, type InlineDiffPart } from './core/inlineDiff';
 import type { CompareResult, DiffItem, DiffOptions, DiffType, FormatMode, TextDiffRow } from './core/types';
+import { useDiffComputation } from './hooks/useDiffComputation';
 
 const FORMAT_OPTIONS: Array<{ value: FormatMode; label: string }> = [
   { value: 'auto', label: 'Auto' },
@@ -126,14 +125,13 @@ export default function App() {
   const rightEditorRef = useRef<CodeDiffEditorHandle | null>(null);
   const editorsRef = useRef<HTMLDivElement | null>(null);
   const syncingScrollRef = useRef(false);
-  const deferredLeft = useDeferredValue(left);
-  const deferredRight = useDeferredValue(right);
-  const comparePending = deferredLeft !== left || deferredRight !== right;
-
-  const result = useMemo(
-    () => compareInputs(deferredLeft, deferredRight, formatMode, options),
-    [deferredLeft, deferredRight, formatMode, options]
-  );
+  const {
+    result,
+    editorDiffModel,
+    pending: diffPending,
+    plan: executionPlan,
+    error: diffError
+  } = useDiffComputation(left, right, formatMode, options);
   const visibleControls = controlsForResult(result, options);
   const workspaceStyle = {
     '--navigator-width': navigatorOpen ? '300px' : '44px'
@@ -142,29 +140,18 @@ export default function App() {
     '--left-editor-size': `${editorSplit}fr`,
     '--right-editor-size': `${100 - editorSplit}fr`
   } as CSSProperties;
-  const editorDiffSuspended = options.showDiffInEditors && comparePending;
+  const editorDiffSuspended = options.showDiffInEditors && diffPending;
   const editorOptions = useMemo(
     () => effectiveEditorOptions(options, editorDiffSuspended),
     [editorDiffSuspended, options]
   );
-  const displayMessage = comparePending
-    ? '正在更新对比...'
-    : message;
+  const displayMessage = diffPending
+    ? executionPlan === 'worker'
+      ? '正在后台更新对比...'
+      : '正在更新对比...'
+    : diffError ?? message;
 
   const selectedIndex = result.items.findIndex((item) => item.id === selectedId);
-  const editorDiffModel = useMemo(
-    () =>
-      editorOptions.showDiffInEditors
-        ? buildEditorDiffModel(
-            left,
-            right,
-            result.leftDetection.kind,
-            result.rightDetection.kind,
-            editorOptions
-          )
-        : buildEmptyEditorDiffModel(left, right),
-    [left, right, result.leftDetection.kind, result.rightDetection.kind, editorOptions]
-  );
   const editorDiffRows = useMemo(
     () => editorDiffModel.rows.filter((row) => row.type !== 'equal'),
     [editorDiffModel]
