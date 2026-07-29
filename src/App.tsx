@@ -31,7 +31,8 @@ import {
   Table2,
   Terminal,
   Upload,
-  Wand2
+  Wand2,
+  Wrench
 } from 'lucide-react';
 import {
   CodeDiffEditor,
@@ -106,6 +107,7 @@ type VisibleControls = Record<
 
 const ARRAY_KEY_FORMATS = new Set<CompareResult['kind']>(['json', 'jsonl', 'yaml', 'toml', 'http']);
 const GITHUB_REPOSITORY_URL = 'https://github.com/difflens-io/difflens';
+const TERMLENS_URL = '/project/termlens/';
 type UtilityPanel = 'controls' | 'stats' | 'source' | null;
 
 export default function App() {
@@ -119,6 +121,7 @@ export default function App() {
   const [editorSplit, setEditorSplit] = useState(50);
   const [syncScroll, setSyncScroll] = useState(false);
   const [utilityPanel, setUtilityPanel] = useState<UtilityPanel>(null);
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
   const leftInputRef = useRef<HTMLInputElement | null>(null);
   const rightInputRef = useRef<HTMLInputElement | null>(null);
   const leftEditorRef = useRef<CodeDiffEditorHandle | null>(null);
@@ -223,6 +226,19 @@ export default function App() {
 
   function trackGitHubRepositoryClick(target: 'repository' | 'star_repository') {
     trackEvent('open_source_link_clicked', { target });
+  }
+
+  function toggleToolsMenu() {
+    setToolsMenuOpen((current) => {
+      const next = !current;
+      trackEvent('tool_menu_toggled', { open: next });
+      return next;
+    });
+  }
+
+  function trackToolLinkOpen(tool: 'termlens') {
+    setToolsMenuOpen(false);
+    trackEvent('tool_link_opened', { tool });
   }
 
   function selectRelative(offset: number) {
@@ -437,6 +453,41 @@ export default function App() {
             <Clipboard size={17} />
             <span>剪贴板对比</span>
           </button>
+
+          <div className="tools-menu">
+            <button
+              type="button"
+              className="icon-button"
+              aria-haspopup="menu"
+              aria-expanded={toolsMenuOpen}
+              onClick={toggleToolsMenu}
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') setToolsMenuOpen(false);
+              }}
+            >
+              <Wrench size={17} />
+              <span>工具</span>
+              <ChevronDown size={15} />
+            </button>
+            {toolsMenuOpen ? (
+              <div className="tools-menu-panel" role="menu">
+                <a
+                  href={TERMLENS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  role="menuitem"
+                  onClick={() => trackToolLinkOpen('termlens')}
+                >
+                  <Terminal size={17} />
+                  <span>
+                    <strong>TermLens Web Terminal</strong>
+                    <small>独立 SSH 终端工具</small>
+                  </span>
+                  <ExternalLink size={15} />
+                </a>
+              </div>
+            ) : null}
+          </div>
 
         </div>
       </header>

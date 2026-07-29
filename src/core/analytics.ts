@@ -29,6 +29,8 @@ export type AnalyticsEventName =
   | 'option_changed'
   | 'sample_loaded'
   | 'sync_scroll_changed'
+  | 'tool_link_opened'
+  | 'tool_menu_toggled'
   | 'utility_panel_toggled';
 
 export type AnalyticsParams = Record<string, string | number | boolean | undefined>;

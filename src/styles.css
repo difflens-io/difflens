@@ -199,6 +199,57 @@ button {
   color: #fff;
 }
 
+.tools-menu {
+  position: relative;
+}
+
+.tools-menu-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 7px);
+  right: 0;
+  width: min(320px, calc(100vw - 28px));
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  background: #fff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+}
+
+.tools-menu-panel a {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  border-radius: 6px;
+  padding: 9px 10px;
+  color: #213048;
+  text-decoration: none;
+}
+
+.tools-menu-panel a:hover {
+  background: #f5f9ff;
+}
+
+.tools-menu-panel strong,
+.tools-menu-panel small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tools-menu-panel strong {
+  font-size: 13px;
+}
+
+.tools-menu-panel small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .utility-band {
   position: relative;
   z-index: 5;
