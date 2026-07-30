@@ -2,6 +2,17 @@
 
 本文件整理 DiffLens 项目的需求和落地改动。后续迭代按日期继续追加。
 
+## 2026-07-30
+
+### CLI 与 AI Skill
+
+- 在改造前创建基线 tag：`pre-core-cli-skill-refactor-20260730`。
+- 新增 DiffLens CLI，复用现有核心对比、格式识别、格式化、忽略路径和值内 diff 逻辑。
+- 新增稳定 JSON 输出和简洁 Markdown 输出，分别服务自动化处理和人工阅读场景。
+- 在 `skills/difflens-diff/` 下新增轻量 Codex skill 包装，通过 CLI 调用核心能力，不重新实现 diff 行为。
+- 新增 CLI 测试，覆盖输出 schema 稳定性、文本值内 diff 和 Markdown 摘要。
+- 保持 Web 应用运行路径不变，线上页面继续使用已有浏览器本地对比流程。
+
 ## 2026-07-26
 
 ### JSONL 格式化

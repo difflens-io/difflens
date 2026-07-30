@@ -16,6 +16,7 @@ DiffLens 是一个在线文本 Diff 工具，面向 JSON、JSONL、HTTP Request�
 - 文本格式按行对比，支持值内差异高亮。
 - 支持从剪贴板读取内容、导入文件、交换左右内容、格式化输入、复制摘要和导出结果。
 - 对比在浏览器本地完成，不上传用户输入的对比内容。
+- 提供 CLI 和轻量 Codex skill 包装，复用与 Web 页面相同的核心 diff 引擎。
 
 ## 支持格式
 
@@ -57,6 +58,18 @@ DiffLens 是一个在线文本 Diff 工具，面向 JSON、JSONL、HTTP Request�
 - 布局调节：差异项区域可收起/展开，左右输入区可拖拽调宽。
 - 同步滚动：可开启左右输入区同步滚动。
 - 安全提示：顶部和结果区明确提示本地处理、不上传内容。
+
+## CLI 与 AI 工作流
+
+DiffLens 可以通过 CLI 调用共享的对比核心：
+
+```bash
+npm run difflens -- compare --left-file left.json --right-file right.json --format auto --output markdown
+npm run difflens -- detect --input-file sample.txt
+npm run difflens -- format --input-file sample.json --format json
+```
+
+仓库内也包含轻量 Codex skill 包装：`skills/difflens-diff/`。这个包装会调用同一套 CLI 和核心实现，保证 AI 辅助对比结果与 Web 页面行为保持一致。
 
 ## 安全与隐私
 
@@ -126,7 +139,7 @@ DIFFLENS_DEPLOY_TARGET=
 npm run test
 ```
 
-当前测试覆盖格式检测、结构化 diff、文本值内 diff、HTTP Request 折叠、忽略路径对输入区差异显示的影响等核心逻辑。
+当前测试覆盖格式检测、结构化 diff、文本值内 diff、HTTP Request 折叠、CLI 输出、忽略路径对输入区差异显示的影响等核心逻辑。
 
 ## 构建
 

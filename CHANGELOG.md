@@ -4,6 +4,17 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 
 [中文版](CHANGELOG.zh-CN.md)
 
+## 2026-07-30
+
+### CLI and AI Skill
+
+- Tagged the pre-refactor baseline as `pre-core-cli-skill-refactor-20260730`.
+- Added a DiffLens CLI that reuses the existing core comparison, format detection, formatting, ignored-path, and inline diff logic.
+- Added stable JSON and concise Markdown output modes for automated and human-readable workflows.
+- Added a thin Codex skill wrapper under `skills/difflens-diff/` that calls the CLI instead of reimplementing diff behavior.
+- Added CLI tests for schema stability, inline text diff output, and Markdown summaries.
+- Kept the web app runtime path unchanged so the website continues to use the established browser comparison flow.
+
 ## 2026-07-26
 
 ### JSONL Formatting

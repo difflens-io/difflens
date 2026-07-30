@@ -1,0 +1,4 @@
+interface:
+  display_name: "DiffLens Diff"
+  short_description: "Compare structured text with DiffLens."
+  default_prompt: "Compare two structured text inputs with DiffLens and summarize the meaningful differences."

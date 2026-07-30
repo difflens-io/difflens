@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+REPO_ROOT="${DIFFLENS_REPO_ROOT:-$DEFAULT_REPO_ROOT}"
+
+if [[ ! -f "$REPO_ROOT/package.json" ]]; then
+  printf 'DiffLens repository root not found. Set DIFFLENS_REPO_ROOT to the repository root.\n' >&2
+  exit 2
+fi
+
+exec npm --prefix "$REPO_ROOT" run -s difflens -- compare "$@"

@@ -18,6 +18,7 @@ DiffLens is an online text diff tool for local comparison of JSON, JSONL, HTTP R
 - Compares text formats by line, with inline highlights for changed value fragments.
 - Supports reading from clipboard, importing files, swapping left and right inputs, formatting input, copying summaries, and exporting results.
 - Runs comparison in the browser; user comparison content is not uploaded.
+- Provides a CLI and thin Codex skill wrapper that reuse the same core diff engine as the web app.
 
 ## Supported Formats
 
@@ -59,6 +60,18 @@ DiffLens is an online text diff tool for local comparison of JSON, JSONL, HTTP R
 - Adjustable layout: the diff item sidebar can collapse or expand, and the two input editors can be resized.
 - Synchronized scrolling: both editors can scroll together when enabled.
 - Privacy notices: the UI clearly states that comparison runs locally and content is not uploaded.
+
+## CLI and AI Workflows
+
+DiffLens exposes the shared comparison core through a CLI:
+
+```bash
+npm run difflens -- compare --left-file left.json --right-file right.json --format auto --output markdown
+npm run difflens -- detect --input-file sample.txt
+npm run difflens -- format --input-file sample.json --format json
+```
+
+The repository also includes a thin Codex skill wrapper in `skills/difflens-diff/`. The wrapper calls the same CLI and core implementation, so AI-assisted comparisons stay consistent with the web app.
 
 ## Security and Privacy
 
@@ -128,7 +141,7 @@ DIFFLENS_DEPLOY_TARGET=
 npm run test
 ```
 
-Current tests cover core logic such as format detection, structured diffing, inline text diffing, HTTP Request folding, and the effect of ignored paths on editor diff display.
+Current tests cover core logic such as format detection, structured diffing, inline text diffing, HTTP Request folding, CLI output, and the effect of ignored paths on editor diff display.
 
 ## Build
 
