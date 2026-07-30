@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_OPTIONS } from '../core/diff';
-import { buildCompareOutput, renderCompareMarkdown } from './difflens';
+import { buildCompareOutput, CLI_DEFAULT_OPTIONS, renderCompareMarkdown } from './difflens';
 
 describe('DiffLens CLI output', () => {
   it('serializes structured JSON differences with a stable schema', () => {
@@ -8,20 +8,27 @@ describe('DiffLens CLI output', () => {
       left: '{"id":1,"name":"Ada","updatedAt":"old"}',
       right: '{"id":1,"name":"Ada Lovelace","updatedAt":"new"}',
       formatMode: 'auto',
-      options: DEFAULT_OPTIONS
+      options: CLI_DEFAULT_OPTIONS
     });
 
     expect(output.schemaVersion).toBe('1.0');
     expect(output.tool).toBe('difflens');
     expect(output.format.kind).toBe('json');
     expect(output.format.mode).toBe('structured');
-    expect(output.stats.total).toBe(1);
+    expect(output.options.ignoredPaths).toEqual([]);
+    expect(output.stats.total).toBe(2);
     expect(output.items).toMatchObject([
       {
         type: 'modified',
         path: '$.name',
         leftPreview: 'Ada',
         rightPreview: 'Ada Lovelace'
+      },
+      {
+        type: 'modified',
+        path: '$.updatedAt',
+        leftPreview: 'old',
+        rightPreview: 'new'
       }
     ]);
   });
@@ -31,7 +38,7 @@ describe('DiffLens CLI output', () => {
       left: 'abcdef',
       right: 'abceedef',
       formatMode: 'text',
-      options: DEFAULT_OPTIONS
+      options: CLI_DEFAULT_OPTIONS
     });
 
     expect(output.items[0].inline?.right.some((part) => part.changed && part.text === 'ee')).toBe(true);
@@ -59,7 +66,7 @@ describe('DiffLens CLI output', () => {
       left,
       right,
       formatMode: 'text',
-      options: DEFAULT_OPTIONS
+      options: CLI_DEFAULT_OPTIONS
     });
 
     expect(output.options.abbreviateLongValues).toBe(false);

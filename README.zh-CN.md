@@ -71,6 +71,8 @@ npm run difflens -- format --input-file sample.json --format json
 
 仓库内也包含轻量 Codex skill 包装：`skills/difflens-diff/`。这个包装会调用同一套 CLI 和核心实现，保证 AI 辅助对比结果与 Web 页面行为保持一致。
 
+Web 页面保留常见易变字段的默认忽略项。CLI 和 skill 包装默认不忽略任何路径，需要时请显式传入 `--ignored-path`。
+
 ## 安全与隐私
 
 DiffLens 的对比计算在浏览器本地完成，用户粘贴、输入或导入的对比内容不会被上传到服务端。

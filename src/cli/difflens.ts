@@ -9,6 +9,14 @@ import type { CompareResult, DiffItem, DiffOptions, FormatKind, FormatMode } fro
 
 const SCHEMA_VERSION = '1.0';
 const DEFAULT_MAX_ITEMS = 200;
+export const CLI_DEFAULT_OPTIONS: DiffOptions = {
+  ...DEFAULT_OPTIONS,
+  ignoredPaths: [],
+  showDiffInEditors: false,
+  showEditorLineNumbers: false,
+  enableEditorFolding: false
+};
+
 const FORMAT_VALUES: FormatMode[] = [
   'auto',
   'json',
@@ -214,20 +222,20 @@ function readDiffOptions(options: ParsedOptions): DiffOptions {
   const abbreviateLongValues = readBooleanOption(
     options,
     'abbreviate-long-values',
-    readBooleanOption(options, 'truncate-long-values', DEFAULT_OPTIONS.abbreviateLongValues)
+    readBooleanOption(options, 'truncate-long-values', CLI_DEFAULT_OPTIONS.abbreviateLongValues)
   );
 
   return {
-    ...DEFAULT_OPTIONS,
-    ignoreWhitespace: readBooleanOption(options, 'ignore-whitespace', DEFAULT_OPTIONS.ignoreWhitespace),
-    ignoreCase: readBooleanOption(options, 'ignore-case', DEFAULT_OPTIONS.ignoreCase),
-    ignoreKeyOrder: readBooleanOption(options, 'ignore-key-order', DEFAULT_OPTIONS.ignoreKeyOrder),
-    highlightInlineChanges: readBooleanOption(options, 'inline', DEFAULT_OPTIONS.highlightInlineChanges),
+    ...CLI_DEFAULT_OPTIONS,
+    ignoreWhitespace: readBooleanOption(options, 'ignore-whitespace', CLI_DEFAULT_OPTIONS.ignoreWhitespace),
+    ignoreCase: readBooleanOption(options, 'ignore-case', CLI_DEFAULT_OPTIONS.ignoreCase),
+    ignoreKeyOrder: readBooleanOption(options, 'ignore-key-order', CLI_DEFAULT_OPTIONS.ignoreKeyOrder),
+    highlightInlineChanges: readBooleanOption(options, 'inline', CLI_DEFAULT_OPTIONS.highlightInlineChanges),
     abbreviateLongValues,
-    onlyChanges: readBooleanOption(options, 'only-changes', DEFAULT_OPTIONS.onlyChanges),
-    ignoredPaths: readListOption(options, 'ignored-path', DEFAULT_OPTIONS.ignoredPaths),
-    arrayKey: readStringOption(options, 'array-key', DEFAULT_OPTIONS.arrayKey),
-    csvKey: readStringOption(options, 'csv-key', DEFAULT_OPTIONS.csvKey),
+    onlyChanges: readBooleanOption(options, 'only-changes', CLI_DEFAULT_OPTIONS.onlyChanges),
+    ignoredPaths: readListOption(options, 'ignored-path', CLI_DEFAULT_OPTIONS.ignoredPaths),
+    arrayKey: readStringOption(options, 'array-key', CLI_DEFAULT_OPTIONS.arrayKey),
+    csvKey: readStringOption(options, 'csv-key', CLI_DEFAULT_OPTIONS.csvKey),
     showDiffInEditors: false,
     showEditorLineNumbers: false,
     enableEditorFolding: false
@@ -356,7 +364,7 @@ Diff options:
   --ignore-whitespace true|false   Default true.
   --ignore-case true|false         Default false.
   --ignore-key-order true|false    Default true.
-  --ignored-path value             Repeatable or comma-separated.
+  --ignored-path value             Repeatable or comma-separated. No ignored paths are applied by default.
   --inline true|false              Include inline spans for modified strings.
   --abbreviate-long-values true|false
   --array-key value                Default id.

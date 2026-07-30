@@ -73,6 +73,8 @@ npm run difflens -- format --input-file sample.json --format json
 
 The repository also includes a thin Codex skill wrapper in `skills/difflens-diff/`. The wrapper calls the same CLI and core implementation, so AI-assisted comparisons stay consistent with the web app.
 
+The web app keeps default ignored paths for common volatile fields. The CLI and skill wrapper do not apply ignored paths by default; pass `--ignored-path` explicitly when needed.
+
 ## Security and Privacy
 
 DiffLens performs comparison in the browser. Text pasted, typed, or imported by the user is not uploaded to a server.

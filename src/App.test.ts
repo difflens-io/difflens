@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_OPTIONS } from './core/diff';
-import { effectiveEditorOptions } from './App';
+import { effectiveEditorOptions, parseIgnoredPathsInput } from './App';
 
 describe('effectiveEditorOptions', () => {
   it('keeps editor diff features enabled when comparison is not pending', () => {
@@ -35,5 +35,19 @@ describe('effectiveEditorOptions', () => {
       onlyChanges: false,
       highlightInlineChanges: false
     });
+  });
+});
+
+describe('parseIgnoredPathsInput', () => {
+  it('allows trailing commas while keeping parsed ignored paths clean', () => {
+    expect(parseIgnoredPathsInput('timestamp, updatedAt,')).toEqual(['timestamp', 'updatedAt']);
+  });
+
+  it('allows appending an item after a trailing comma', () => {
+    expect(parseIgnoredPathsInput('timestamp, updatedAt, $.meta.*')).toEqual([
+      'timestamp',
+      'updatedAt',
+      '$.meta.*'
+    ]);
   });
 });

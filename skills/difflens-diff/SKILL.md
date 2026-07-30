@@ -46,3 +46,5 @@ Use `--output json` for follow-up processing and `--output markdown` for a conci
 ## Security
 
 The script runs locally and does not upload compared content. Avoid sending sensitive input to external services while preparing, summarizing, or sharing results.
+
+No ignored paths are applied by default in the CLI or skill wrapper. Pass `--ignored-path` explicitly when a comparison should hide volatile fields such as timestamps.

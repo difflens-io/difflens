@@ -10,10 +10,16 @@ This file summarizes DiffLens requirements and implementation changes. Future it
 
 - Tagged the pre-refactor baseline as `pre-core-cli-skill-refactor-20260730`.
 - Added a DiffLens CLI that reuses the existing core comparison, format detection, formatting, ignored-path, and inline diff logic.
+- Changed CLI and skill defaults so ignored paths are empty unless `--ignored-path` is passed explicitly.
 - Added stable JSON and concise Markdown output modes for automated and human-readable workflows.
 - Added a thin Codex skill wrapper under `skills/difflens-diff/` that calls the CLI instead of reimplementing diff behavior.
 - Added CLI tests for schema stability, inline text diff output, and Markdown summaries.
 - Kept the web app runtime path unchanged so the website continues to use the established browser comparison flow.
+
+### Web Controls
+
+- Kept the web app's default ignored paths for common volatile fields.
+- Fixed the ignored-path input so users can append a comma at the end and continue typing the next path naturally.
 
 ## 2026-07-26
 

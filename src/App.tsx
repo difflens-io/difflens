@@ -115,6 +115,9 @@ export default function App() {
   const [right, setRight] = useState(JSON_RIGHT);
   const [formatMode, setFormatMode] = useState<FormatMode>('auto');
   const [options, setOptions] = useState<DiffOptions>(DEFAULT_OPTIONS);
+  const [ignoredPathsInput, setIgnoredPathsInput] = useState(() =>
+    formatIgnoredPathsInput(DEFAULT_OPTIONS.ignoredPaths)
+  );
   const [selectedId, setSelectedId] = useState<string>('');
   const [message, setMessage] = useState('');
   const [navigatorOpen, setNavigatorOpen] = useState(true);
@@ -181,6 +184,11 @@ export default function App() {
         enabled: value
       });
     }
+  }
+
+  function updateIgnoredPathsInput(value: string) {
+    setIgnoredPathsInput(value);
+    updateOption('ignoredPaths', parseIgnoredPathsInput(value));
   }
 
   async function compareWithClipboard() {
@@ -642,16 +650,8 @@ export default function App() {
               <label className="text-field wide">
                 <span>忽略路径</span>
                 <input
-                  value={options.ignoredPaths.join(', ')}
-                  onChange={(event) =>
-                    updateOption(
-                      'ignoredPaths',
-                      event.target.value
-                        .split(',')
-                        .map((item) => item.trim())
-                        .filter(Boolean)
-                    )
-                  }
+                  value={ignoredPathsInput}
+                  onChange={(event) => updateIgnoredPathsInput(event.target.value)}
                   placeholder="timestamp, $.meta.*"
                 />
               </label>
@@ -921,6 +921,17 @@ export function effectiveEditorOptions(options: DiffOptions, suspended: boolean)
     onlyChanges: false,
     highlightInlineChanges: false
   };
+}
+
+export function parseIgnoredPathsInput(value: string): string[] {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function formatIgnoredPathsInput(paths: string[]): string {
+  return paths.join(', ');
 }
 
 function controlsForResult(result: CompareResult, options: DiffOptions): VisibleControls {
